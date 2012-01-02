@@ -1,0 +1,74 @@
+<?php
+if(isset($_GET['s'])){
+$textSize = $_GET['s'];
+}
+else{
+$textSize = 25;
+}
+if(isset($_GET['w'])){
+$textCharsW = $_GET['w'];
+}
+else{
+$textCharsW = 20;
+}
+if(isset($_GET['t'])){
+$text = $_GET['t'];
+}
+else{
+$text = "x flips the X-axis  y flips the Y-axis  Up/Down for speed   Space Pauses                            Pass the text size  and wrap width as    s & w via a get    request. pass t as a get to display text";
+}
+?>
+<html>
+  <head>
+    <title>Simple Prompter</title>
+    <script type="text/javascript">
+    // Canvas Settings
+	var canvasElement;
+	var myCanvasH;
+	var myCanvasW; 
+	var canvas;
+
+	//Text Settings
+	var Text = "<?=$text?>";
+	var TextX = 40;
+	var TextY = 350;
+	var TextBaseline = "top";
+	var TextSize = <?=$textSize?>; 
+	var textSpeed = 0;
+	var textCharsW = <?=$textCharsW?>;
+	
+	function init(){
+		setInterval(draw, 40);
+		handleKeys();
+		canvasElement = document.getElementById('myCanvas');  
+		div = document.getElementById('can')[0];
+
+		//alert(document.body.scrollWidth);
+		myCanvasW = canvasElement.width = document.body.scrollWidth - 10;
+		myCanvasH = canvasElement.height = document.body.scrollHeight - 10;
+	}
+    </script>
+    <script type="text/javascript" src="scripts/prompter.js"></script>
+    <style type="text/css">
+      body {
+      	background-color: black;
+      }
+      canvas {
+       border: 1px solid black; 
+       background-color: black;
+      }
+       #can {
+       	position:absolute;
+       	left:0px;
+       	top:0px;
+       	width:100%;
+       	height:100%;
+       }
+    </style>
+  </head>
+  <body onload="init();">
+  <div id="can" onclick="textSpeed += 1;">
+    <canvas id="myCanvas" width="800" height="400"></canvas>
+  </div>
+  </body>
+</html>
