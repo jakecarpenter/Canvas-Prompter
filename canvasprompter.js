@@ -163,6 +163,31 @@ var PROMPTER = function(options){
 	};
 	
 	//utility stuff here
+	function getXMLHttp() {
+	  var xmlHttp;
+	
+	  try {
+	    //good browsers
+	    xmlHttp = new XMLHttpRequest();
+	  }
+	  catch(e){
+	    //e'rthing else
+	    try {
+	      xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+	    }
+	    catch(e){
+	      try{
+	        xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+	      }
+	      catch(e){
+	        alert("Your browser does not support AJAX!");
+	        return false;
+	      }
+	    }
+	  }
+	  return xmlHttp;
+	}
+	
 	function drawCaret(){
 		//draw a caret
 		overlayContext.fillStyle = caret.color;
@@ -214,6 +239,25 @@ var PROMPTER = function(options){
 		text.height = size || text.height;
 		text.font = "bold "+ text.height +"px sans-serif";
 	}
+	
+	//remote text fetching, set use to true or set with setText
+	function getRemoteScript(url, use){
+		var xmlHttp = getXMLHttp();
+		
+		xmlHttp.onreadystatechange = function(){
+		  if(xmlHttp.readyState == 4) {
+		    if(use === true){
+		    	script = xmlHttp.responseText;
+		    }
+		    else{
+   			    return xmlHttp.responseText;
+		    }
+		  }
+		}
+		
+		xmlHttp.open("GET", url, true); 
+		xmlHttp.send(null);	
+	} 
 
 	//view stuff here
 	
@@ -254,7 +298,7 @@ var PROMPTER = function(options){
 		increaseFontSize: function(){setFontSize(text.height + 1); scriptStale = true;},
 		decreaseFontSize: function(){setFontSize(text.height -1); scriptStale = true;},
 		setText: function(text){script = text;},
-		
+		getRemoteScript: getRemoteScript,
 	};
 	
 

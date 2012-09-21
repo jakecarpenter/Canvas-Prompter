@@ -28,13 +28,12 @@
 	prompter.bindKey(88,prompter.flipHorizontal);
 	prompter.bindKey(89,prompter.flipVertical);
 	prompter.bindKey(32,prompter.stopStart);
-	prompter.bindKey(39,function(){alert("test")});
+	prompter.bindKey(39,function(){return prompter.getRemoteScript("http://jakecarpenter.com/canvasprompter/script", true)});
 	prompter.bindKey(85,prompter.decreaseFontSize);
 	prompter.bindKey(73,prompter.increaseFontSize);
 	prompter.init();
 	
     </script>
-
   </body>
   
 </html>
