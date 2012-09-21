@@ -24,12 +24,13 @@
 	var prompter = new PROMPTER();
 
 	//bind keys for control
-	// x = 88, y = 89, 32 = space, 38 = up, 40 = down
+	// x = 88, y = 89, 32 = space, 38 = up, 39 = right, 40 = down
 	prompter.bindKey(88,prompter.flipHorizontal);
 	prompter.bindKey(89,prompter.flipVertical);
 	prompter.bindKey(32,prompter.stopStart);
 	prompter.bindKey(39,function(){alert("test")});
-	
+	prompter.bindKey(85,prompter.decreaseFontSize);
+	prompter.bindKey(73,prompter.increaseFontSize);
 	prompter.init();
 	
     </script>

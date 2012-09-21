@@ -2,6 +2,7 @@ var PROMPTER = function(options){
 	//if no options, great we'll do it all by ourself.
 	var options = options || {};
 		options.text = options.text || {};
+		options.caret = options.caret || {};
 	
 	//first, what text are we showing the user?
 	var script = options.script || 
@@ -17,24 +18,25 @@ var PROMPTER = function(options){
 	var orientation = options.orientation || 90;
 	
 	//default width & height, get monkeyed with when orientation changes.
-	var width = options.width || 700;
-	var height = options.height || 450;
+	var width = options.width || 900;
+	var height = options.height || 650;
 	
 	//initial text settings, can be changed anytime.
-	var text = {};
+	var text = options.text || {};
 		text.x = 5;
-		text.height = 24;
+		text.height = 44;
 		text.font = options.text.font || "bold "+ text.height +"px sans-serif";
 		text.baseline = options.text.baseline || "top";
 		text.style = "#fff";
 
 	//caret/guidline setup.
-	var caret = {};
+	var caret = options.caret || {};
 		caret.color = "yellow";
 		caret.x = 10;
 		caret.y = 200;
 		caret.height = 40;
 		caret.width = 40;
+		caret.visible = options.caret.visible || true;
 		
 	//if there was a container element specified, use it, otherwise make our own
 	var containerElement = options.container || function(){
@@ -45,7 +47,8 @@ var PROMPTER = function(options){
 	}();
 	
 	//motion stuff
-	var paused = false;
+	var paused = true;
+	
 	//we need to know if our overlay or script setup has changed and needs a redraw (ie, its stale)
 	var overlayStale = true;
 	var scriptStale = true;
@@ -79,21 +82,28 @@ var PROMPTER = function(options){
 	var overlayContext = overlayCanvas.getContext('2d');
 	
 	//drawing/refreshing stuff here
+	
+	//position of top of text while scrolling
+	var scrollPosY = 0;
+	var scrollSpeed = -1;
+	
 	//draw is where the magic happens.
 	var draw = function(){
-		if(paused){
-			return;
-		}
+		
 		if(overlayStale == true){
 			overlayContext.clearRect(0,0,width, height);
-			drawCaret();
+			
+			//if we're using a caret, draw it.
+			if(caret.visible === true) {
+				drawCaret();
+			}
 			
 			//we've redrawn/refigured the overlay, so its no longer stale
 			overlayStale = false;
 		}
 		
-		if(scriptStale == true){
-			scriptText = textLines(script, width - caret.width);
+		if(scriptStale === true){
+			scriptText = textLines(script, width - caret.width - 10);
 		}
 		
 		//clear the canvas
@@ -107,10 +117,22 @@ var PROMPTER = function(options){
 		var lineOffsetY = 0;
 		
 		for(var line in scriptText){
-			scriptContext.fillText(scriptText[line], text.x + caret.width, lineOffsetY);
+			var scrollY =  scrollPosY + lineOffsetY;
+			
+			//only show lines that are on the screen
+			if(scrollY > 0 - text.height){
+				scriptContext.fillText(scriptText[line], text.x + caret.width, scrollY);
+			}
+			if(scrollY > height){
+				continue;
+			}
 			lineOffsetY += text.height;	
+			
 		}
 		//scriptContext.fillText(text, 10, 10);
+		if(!paused){
+			scrollPosY += scrollSpeed;
+		}
 		
 	};
 	
@@ -137,7 +159,7 @@ var PROMPTER = function(options){
 	 * basically a pause. resumes at original speed.
 	 */
 	var stopStart = function(){
-		
+		paused = !paused;
 	};
 	
 	//utility stuff here
@@ -187,6 +209,11 @@ var PROMPTER = function(options){
 	    }
 	    return phraseArray;
 	}
+	
+	function setFontSize(size){
+		text.height = size || text.height;
+		text.font = "bold "+ text.height +"px sans-serif";
+	}
 
 	//view stuff here
 	
@@ -224,6 +251,9 @@ var PROMPTER = function(options){
 		stopStart: stopStart,
 		caret: caret,
 		draw: draw,
+		increaseFontSize: function(){setFontSize(text.height + 1); scriptStale = true;},
+		decreaseFontSize: function(){setFontSize(text.height -1); scriptStale = true;},
+		setText: function(text){script = text;},
 		
 	};
 	
