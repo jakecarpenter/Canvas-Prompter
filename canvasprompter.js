@@ -3,9 +3,24 @@ var PROMPTER = function(options){
 	var options = options || {};
 		options.text = options.text || {};
 		options.caret = options.caret || {};
+		options.keys = options.keys || {
+			//setup the default keys.
+			// x = 88, y = 89, 32 = space, 38 = up
+			88: "flipHorizontal",
+			89: "flipVertical",
+			32: "stopStart",
+			39: "getScript",
+			85: "decreaseFontSize", //not yet implemented
+			73: "increaseFontSize", //not yet implemented
+			187: 'increaseSpeed',
+			189: 'decreaseSpeed',
+			27: 'resetScript'
+		};
+		
+		options.script = options.script || {};
 	
 	//first, what text are we showing the user?
-	var script = options.script || 
+	var script = options.script.text || 
 	"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed augue sem,"+
 	"porta id pharetra sit amet, dignissim egestas orci. Duis iaculis luctus"+
 	"vehicula. Fusce orci sapien, pharetra ac molestie eu, tincidunt sed ipsum. "+
@@ -38,6 +53,9 @@ var PROMPTER = function(options){
 		caret.width = 40;
 		caret.visible = options.caret.visible || true;
 		
+	//key setup
+	var keys = options.keys;
+	
 	//if there was a container element specified, use it, otherwise make our own
 	var containerElement = options.container || function(){
 		var c = document.createElement('div');
@@ -88,7 +106,7 @@ var PROMPTER = function(options){
 	var scrollSpeed = -1;
 	
 	//draw is where the magic happens.
-	var draw = function(){
+	function draw(){
 		
 		if(overlayStale == true){
 			overlayContext.clearRect(0,0,width, height);
@@ -129,39 +147,52 @@ var PROMPTER = function(options){
 			lineOffsetY += text.height;	
 			
 		}
-		//scriptContext.fillText(text, 10, 10);
+		
+		//set the starting position for the next frame
 		if(!paused){
 			scrollPosY += scrollSpeed;
 		}
 		
 	};
 	
-	var flipHorizontal = function(){
-		overlayContext.scale(-1,1);
-		overlayContext.translate(-overlayCanvas.width,0);
-		overlayStale = true;
-		
-		scriptContext.scale(-1,1);
-		scriptContext.translate(-scriptCanvas.width,0);
-	};
-	
-	var flipVertical = function(){
-		overlayContext.scale(1,-1);
-		overlayContext.translate(0,-overlayCanvas.height);
-		overlayStale = true;
-		
-		scriptContext.scale(1,-1);
-	   	scriptContext.translate(0,-scriptCanvas.height);
+	//all of our bindable control functions:
+	var controls = {
+		flipHorizontal: function(){
+			overlayContext.scale(-1,1);
+			overlayContext.translate(-overlayCanvas.width,0);
+			overlayStale = true;
+			
+			scriptContext.scale(-1,1);
+			scriptContext.translate(-scriptCanvas.width,0);
+		},
+		flipVertical: function(){
+			overlayContext.scale(1,-1);
+			overlayContext.translate(0,-overlayCanvas.height);
+			overlayStale = true;
+			
+			scriptContext.scale(1,-1);
+		   	scriptContext.translate(0,-scriptCanvas.height);
 
-	};
-	
-	/*
-	 * basically a pause. resumes at original speed.
-	 */
-	var stopStart = function(){
-		paused = !paused;
-	};
-	
+		},
+		stopStart: function(){
+			paused = !paused;
+		},
+		getScript: function(){
+			getRemoteScript(options.script.url, true);
+		},
+		increaseSpeed: function(){
+			scrollSpeed -= 1;
+		},
+		decreaseSpeed: function(){
+			scrollSpeed += 1;
+		},
+		resetScript: function(){
+			scrollPosY = 0;
+			paused = true;
+			scrollSpeed = -1;
+		}
+	}
+
 	//utility stuff here
 	function getXMLHttp() {
 	  var xmlHttp;
@@ -263,31 +294,30 @@ var PROMPTER = function(options){
 	
 	//key event stuff here
 	//the commands we'll use. none by default.
-	var keys = {};
-	
-	//add a command. Pretty simple, but may need to make it do stuff later.
-	var bindKey = function(keycode, func){
-		keys[keycode] = func;
-	};
-	
+
 	var handleKeyPress = function(e){
 		e = e || window.event;
 		key = e.keyCode;
-		if(typeof keys[key] == 'function'){
-			keys[key]();
+		if(typeof controls[keys[key]] === 'function'){
+			controls[keys[key]]();
 		}
-		//console.log(key + ": " + keys[key]);
+		//for dev purposes, tell us the keycodes.
+		console.log(e.keyCode);
 	};
 	
 	//initialization code.
-	var init = function(){
+	function init(){
 		document.onkeydown = handleKeyPress;
 
-		window.setInterval(this.draw, 40);
-		
+		window.setInterval(draw, 30);
+		console.log(options);
+		console.log(keys);
 	};
 	
-	return {
+	init();
+	
+	return this;
+	/*return {
 		init: init,
 		bindKey: bindKey,
 		flipHorizontal: flipHorizontal,
@@ -299,7 +329,7 @@ var PROMPTER = function(options){
 		decreaseFontSize: function(){setFontSize(text.height -1); scriptStale = true;},
 		setText: function(text){script = text;},
 		getRemoteScript: getRemoteScript,
-	};
+	};*/
 	
 
 }

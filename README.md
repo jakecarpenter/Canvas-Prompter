@@ -2,7 +2,6 @@ Canvas Prompter is intended to be a simple teleprompter, it should work in the b
 
 Features I'd like to add: 
 	*Remote Control 
-	*Text from URL or file -- started
 
 How the program will work: (ie: todo)
 *break the script into an abject, each word has an entry. 

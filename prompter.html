@@ -21,18 +21,16 @@
     <script type="text/javascript" src="canvasprompter.js"></script>
     <script type="text/javascript">
 
-	var prompter = new PROMPTER();
-
-	//bind keys for control
-	// x = 88, y = 89, 32 = space, 38 = up, 39 = right, 40 = down
-	prompter.bindKey(88,prompter.flipHorizontal);
-	prompter.bindKey(89,prompter.flipVertical);
-	prompter.bindKey(32,prompter.stopStart);
-	prompter.bindKey(39,function(){return prompter.getRemoteScript("http://jakecarpenter.com/canvasprompter/script", true)});
-	prompter.bindKey(85,prompter.decreaseFontSize);
-	prompter.bindKey(73,prompter.increaseFontSize);
-	prompter.init();
-	
+	//set the options:
+	var options = {
+		//where do we get the script?
+		script: {
+			url: "http://jakecarpenter.com/canvasprompter/license",
+			
+		}
+	}
+	//now, create the prompter
+	var prompter = new PROMPTER(options);
     </script>
   </body>
   
