@@ -123,8 +123,8 @@ var PROMPTER = function(options){
 		}
 		
 		if(scriptStale === true){
-			scriptText = getLines(width - caret.width - 10, scriptify(script));
-
+			scriptText = getLines(width - caret.width - 10, scriptify(script,500));
+			scriptStale = false;
 		}
 		
 		//clear the canvas
@@ -281,10 +281,11 @@ var PROMPTER = function(options){
 	
 	function getLines(width, script){
 		//seperate obj to keep track of lines.
-		var lines = [];
-		
+		var lines = {};
+		var i = 0;
 		for(word in script){
-			alert(word.word);
+			//alert(word.word);
+			lines[0] = script[word].word;
 		}
 		
 		return lines;
@@ -294,7 +295,9 @@ var PROMPTER = function(options){
 	 * convert the script string to an object that we can more easily process into a preetty script.
 	 * it requires a valid script context to measure the words, so we'll us the script context.
 	 */
-	function scriptify(scriptString){
+	function scriptify(scriptString, lineWidth){
+		var lineWidth = lineWidth || width;
+		
 		var script = {};
 		
 		//split the string on spaces
@@ -308,6 +311,31 @@ var PROMPTER = function(options){
 			};
 			
 		}
+		
+		//divide the words into lines
+		var lines = {};
+		var i = 0;
+		
+		//a place to build our line
+		var line = {};
+		
+		for(var word in script){
+			if(line.width <= lineWidth){
+				line.text = line.text + script[word].word;
+				line.width = line.width + script[word].width;
+			}
+			else {
+				lines[i] = line;
+				line = {};
+				i++;
+				line.text = line.text + script[word].word;
+				line.width = script[word].width;
+			}	
+		}
+		console.log("lines:");
+		console.log(lines);
+		console.log("script:");
+		console.log(script);
 		//return the processed object
 		return script;
 	}
@@ -356,8 +384,6 @@ var PROMPTER = function(options){
 		document.onkeydown = handleKeyPress;
 
 		window.setInterval(draw, 30);
-		console.log(options);
-		console.log(keys);
 	};
 	
 	init();
