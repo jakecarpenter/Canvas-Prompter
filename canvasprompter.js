@@ -14,7 +14,9 @@ var PROMPTER = function(options){
 			73: "increaseFontSize", //not yet implemented
 			187: 'increaseSpeed',
 			189: 'decreaseSpeed',
-			27: 'resetScript'
+			27: 'resetScript',
+			//development
+			83: 'scriptify',
 		};
 		
 		options.script = options.script || {};
@@ -121,7 +123,8 @@ var PROMPTER = function(options){
 		}
 		
 		if(scriptStale === true){
-			scriptText = textLines(script, width - caret.width - 10);
+			scriptText = getLines(width - caret.width - 10, scriptify(script));
+
 		}
 		
 		//clear the canvas
@@ -190,7 +193,11 @@ var PROMPTER = function(options){
 			scrollPosY = 0;
 			paused = true;
 			scrollSpeed = -1;
-		}
+		},
+		scriptify: function(){
+			console.log(scriptify(script));
+			
+		},
 	}
 
 	//utility stuff here
@@ -230,6 +237,8 @@ var PROMPTER = function(options){
 	}
 	
 	/**
+	 * 			OLD OLD OLD OLD OLD 
+	 * 
 	 * This stuff is borrowed from a stack overflow answer: http://stackoverflow.com/questions/2936112/text-wrap-in-a-canvas-element
 	 * originally answered by mizar and edited by Paul Woolcock
 	 * Divide an entire phrase in an array of phrases, all with the max pixel length given.
@@ -237,13 +246,14 @@ var PROMPTER = function(options){
 	 * @param phrase
 	 * @param length
 	 * @return
-	 */
+	 *
 	var textLines = function (phrase,maxPxLength) {
 	    var wordArray = phrase.split(" "),
 	        phraseArray=[],
 	        lastPhrase="",
 	        l=maxPxLength,
 	        measure=0;
+	        
 	    for (var i=0;i<wordArray.length;i++) {
 	        
 	        var word=wordArray[i];
@@ -263,7 +273,43 @@ var PROMPTER = function(options){
 	            break;
 	        }
 	    }
+	    
+	    
 	    return phraseArray;
+	}
+	*/
+	
+	function getLines(width, script){
+		//seperate obj to keep track of lines.
+		var lines = [];
+		
+		for(word in script){
+			alert(word.word);
+		}
+		
+		return lines;
+	}
+	
+	/*
+	 * convert the script string to an object that we can more easily process into a preetty script.
+	 * it requires a valid script context to measure the words, so we'll us the script context.
+	 */
+	function scriptify(scriptString){
+		var script = {};
+		
+		//split the string on spaces
+		var tempArray = scriptString.split(" ");
+		
+		for(var i = 0 ; i < tempArray.length; i++){
+			script[i] = {
+				'word': " " + tempArray[i],
+				//take the word and measure it, and store that.
+				'width': scriptContext.measureText(" " + tempArray[i]).width,
+			};
+			
+		}
+		//return the processed object
+		return script;
 	}
 	
 	function setFontSize(size){
