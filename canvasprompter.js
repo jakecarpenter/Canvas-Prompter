@@ -1,34 +1,36 @@
-var PROMPTER = function(options){
+var PROMPTER = function (options) {
 	//if no options, great we'll do it all by ourself.
 	var options = options || {};
-		options.text = options.text || {};
-		options.caret = options.caret || {};
-		options.keys = options.keys || {
-			//setup the default keys.
-			// x = 88, y = 89, 32 = space, 38 = up
-			88: "flipHorizontal",
-			89: "flipVertical",
-			32: "stopStart",
-			39: "getScript",
-			85: "decreaseFontSize", //not yet implemented
-			73: "increaseFontSize", //not yet implemented
-			187: 'increaseSpeed',
-			189: 'decreaseSpeed',
-			27: 'resetScript',
-			//development
-			83: 'scriptify',
-		};
-		
-		options.script = options.script || {};
 	
-		//first, what text are we showing the user?
-		var script = scriptify("Lorem <<ipsum>> dolor {sit} amet, [*** consectetur adipiscing elit. ***] Sed augue sem,"+
-		"porta id pharetra sit amet, dignissim egestas orci. Duis iaculis luctus"+
-		"vehicula. Fusce orci sapien, pharetra ac molestie eu, tincidunt sed ipsum. "+
-		"Integer sit amet dolor eu est viverra ultrices. Suspendisse potenti. "+
-		"Nullam semper neque quis odio laoreet consectetur egestas eros pretium. "+
-		"Praesent accumsan dictum pretium. Morbi tristique nulla sit amet nisl "+
-		"lacinia et cursus neque molestie. ");
+	//options.text = options.text || {},
+	//options.caret = options.caret || {},
+	options.keys = options.keys || {
+		//setup the default keys.
+		// x = 88, y = 89, 32 = space, 38 = up, u = 85, i = 73
+		88: "flipHorizontal",
+		89: "flipVertical",
+		32: "stopStart",
+		39: "getScript",
+		85: "decreaseFontSize", //not yet implemented
+		73: "increaseFontSize", //not yet implemented
+		187: 'increaseSpeed',
+		189: 'decreaseSpeed',
+		27: 'resetScript',
+		//development
+		83: 'scriptify',
+		77: 'maximize' //make the prompter full window.
+	};
+		
+	options.script = options.script || {};
+	
+	//first, what text are we showing the user?
+	var script = scriptify("Lorem <<ipsum>> dolor {sit} amet, [*** consectetur adipiscing elit. ***] Sed augue sem," +
+	"porta id pharetra sit amet, dignissim egestas orci. Duis iaculis luctus" +
+	"vehicula. Fusce orci sapien, pharetra ac molestie eu, tincidunt sed ipsum. " +
+	"Integer sit amet dolor eu est viverra ultrices. Suspendisse potenti. " +
+	"Nullam semper neque quis odio laoreet consectetur egestas eros pretium. " +
+	"Praesent accumsan dictum pretium. Morbi tristique nulla sit amet nisl " +
+	"lacinia et cursus neque molestie. ");
 	
 	//orietation is for tablet devices.
 	var orientation = options.orientation || 90;
@@ -38,44 +40,50 @@ var PROMPTER = function(options){
 	var height = options.height || 650;
 	
 	//initial text settings, can be changed anytime. classes are base, information, notice, important
-	var text =  {base:{},information:{},notice:{},important:{}};
+	var text = {
+			base: {},
+			information: {},
+			notice: {},
+			important: {}
+		};
+		
 		text.base.x = 5;
 		text.base.height = 64;
 		text.base.font = "bold "+ text.base.height +"px sans-serif";
-		text.base.baseline = options.text.baseline || "top";
+		text.base.baseline =  "top";
 		text.base.style = "#fff";
 		text.base.background = "#000";
 		
 		text.information.x = 5;
 		text.information.height = 64;
 		text.information.font = "bold "+ text.information.height +"px sans-serif";
-		text.information.baseline = options.text.baseline || "top";
+		text.information.baseline = "top";
 		text.information.style = "yellow";
 		text.information.background = "#000";
 		
 		text.notice.x = 5;
 		text.notice.height = 64;
 		text.notice.font = "bold "+ text.notice.height +"px sans-serif";
-		text.notice.baseline = options.text.baseline || "top";
+		text.notice.baseline = "top";
 		text.notice.style = "pink";
 		text.notice.background = "#000";
 		
 		text.important.x = 5;
 		text.important.height = 64;
 		text.important.font = "bold "+ text.important.height +"px sans-serif";
-		text.important.baseline = options.text.baseline || "top";
+		text.important.baseline = "top";
 		text.important.style = "#000";
 		text.important.background = "#fff";
 		
 
 	//caret/guidline setup.
-	var caret = options.caret || {};
+	var caret = {};
 		caret.color = "yellow";
 		caret.x = 10;
 		caret.y = 200;
 		caret.height = 40;
 		caret.width = 40;
-		caret.visible = options.caret.visible || true;
+		caret.visible = true;
 		
 	//key setup
 	var keys = options.keys;
@@ -88,7 +96,7 @@ var PROMPTER = function(options){
 		return c;
 	}();
 	
-	//motion stuff
+	//we start out paused.
 	var paused = true;
 	
 	//we need to know if our overlay or script setup has changed and needs a redraw (ie, its stale)
@@ -137,7 +145,7 @@ var PROMPTER = function(options){
 			overlayContext.clearRect(0,0,width, height);
 			
 			//if we're using a caret, draw it.
-			if(caret.visible === true) {
+			if(caret.visible == true) {
 				drawCaret();
 			}
 			
@@ -193,6 +201,18 @@ var PROMPTER = function(options){
 		
 	};
 	
+	//a function to set the canvas size, at anytime
+	var setCanvasSize = function(newWidth, newHeight){
+		overlayCanvas.setAttribute('height',newHeight);
+		overlayCanvas.setAttribute('width',newWidth);
+		
+		scriptCanvas.setAttribute('height',newHeight);
+		scriptCanvas.setAttribute('width',newWidth);
+		
+		height = newHeight;
+		width = newWidth;
+	}
+	
 	//all of our bindable control functions:
 	var controls = {
 		flipHorizontal: function(){
@@ -231,6 +251,38 @@ var PROMPTER = function(options){
 			paused = true;
 			scrollSpeed = -1;
 		},
+		maximize: function(){
+			setCanvasSize(window.document.width,window.document.height);
+			overlayStale = true;
+			scriptStale = true;
+			console.log(height);
+		},
+		increaseFontSize: function(){
+			text.base.height += 2;
+			text.notice.height += 2;
+			text.information.height += 2;
+			text.important.height += 2;
+
+			text.base.font = "bold "+ text.base.height +"px sans-serif";
+			text.information.font = "bold "+ text.information.height +"px sans-serif";
+			text.notice.font = "bold "+ text.notice.height +"px sans-serif";
+			text.important.font = "bold "+ text.important.height +"px sans-serif";
+
+			
+			scriptStale = true;
+		},
+		decreaseFontSize: function(){
+			text.base.height -= 2;
+			text.notice.height -= 2;
+			text.information.height -= 2;
+			text.important.height -= 2;
+			text.base.font = "bold "+ text.base.height +"px sans-serif";
+			text.information.font = "bold "+ text.information.height +"px sans-serif";
+			text.notice.font = "bold "+ text.notice.height +"px sans-serif";
+			text.important.font = "bold "+ text.important.height +"px sans-serif";
+			scriptStale = true;
+			
+		}
 
 	}
 
@@ -395,7 +447,9 @@ var PROMPTER = function(options){
 		xmlHttp.onreadystatechange = function(){
 		  if(xmlHttp.readyState == 4) {
 		    if(use === true){
-		    	script = xmlHttp.responseText;
+		    	script = scriptify(xmlHttp.responseText);
+		    	//since we are getting a new script, we need to tell the render the old one is stale.
+				scriptStale = true;
 		    }
 		    else{
    			    return xmlHttp.responseText;
@@ -406,8 +460,7 @@ var PROMPTER = function(options){
 		xmlHttp.open("GET", url, true); 
 		xmlHttp.send(null);	
 		
-		//since we are getting a new script, we need to tell the render the old one is stale.
-		scriptStale = true;
+		
 	} 
 
 	//view stuff here
@@ -433,21 +486,5 @@ var PROMPTER = function(options){
 	};
 	
 	init();
-	
 	return this;
-	/*return {
-		init: init,
-		bindKey: bindKey,
-		flipHorizontal: flipHorizontal,
-		flipVertical: flipVertical,
-		stopStart: stopStart,
-		caret: caret,
-		draw: draw,
-		increaseFontSize: function(){setFontSize(text.height + 1); scriptStale = true;},
-		decreaseFontSize: function(){setFontSize(text.height -1); scriptStale = true;},
-		setText: function(text){script = text;},
-		getRemoteScript: getRemoteScript,
-	};*/
-	
-
 }
