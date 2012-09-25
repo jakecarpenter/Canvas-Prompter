@@ -21,14 +21,14 @@ var PROMPTER = function(options){
 		
 		options.script = options.script || {};
 	
-	//first, what text are we showing the user?
-	var script = scriptify("Lorem <<ipsum>> dolor {sit} amet, [*** consectetur adipiscing elit. ***] Sed augue sem,"+
-	"porta id pharetra sit amet, dignissim egestas orci. Duis iaculis luctus"+
-	"vehicula. Fusce orci sapien, pharetra ac molestie eu, tincidunt sed ipsum. "+
-	"Integer sit amet dolor eu est viverra ultrices. Suspendisse potenti. "+
-	"Nullam semper neque quis odio laoreet consectetur egestas eros pretium. "+
-	"Praesent accumsan dictum pretium. Morbi tristique nulla sit amet nisl "+
-	"lacinia et cursus neque molestie. ");
+		//first, what text are we showing the user?
+		var script = scriptify("Lorem <<ipsum>> dolor {sit} amet, [*** consectetur adipiscing elit. ***] Sed augue sem,"+
+		"porta id pharetra sit amet, dignissim egestas orci. Duis iaculis luctus"+
+		"vehicula. Fusce orci sapien, pharetra ac molestie eu, tincidunt sed ipsum. "+
+		"Integer sit amet dolor eu est viverra ultrices. Suspendisse potenti. "+
+		"Nullam semper neque quis odio laoreet consectetur egestas eros pretium. "+
+		"Praesent accumsan dictum pretium. Morbi tristique nulla sit amet nisl "+
+		"lacinia et cursus neque molestie. ");
 	
 	//orietation is for tablet devices.
 	var orientation = options.orientation || 90;
@@ -40,28 +40,28 @@ var PROMPTER = function(options){
 	//initial text settings, can be changed anytime. classes are base, information, notice, important
 	var text =  {base:{},information:{},notice:{},important:{}};
 		text.base.x = 5;
-		text.base.height = 44;
+		text.base.height = 64;
 		text.base.font = "bold "+ text.base.height +"px sans-serif";
 		text.base.baseline = options.text.baseline || "top";
 		text.base.style = "#fff";
 		text.base.background = "#000";
 		
 		text.information.x = 5;
-		text.information.height = 44;
+		text.information.height = 64;
 		text.information.font = "bold "+ text.information.height +"px sans-serif";
 		text.information.baseline = options.text.baseline || "top";
 		text.information.style = "yellow";
 		text.information.background = "#000";
 		
 		text.notice.x = 5;
-		text.notice.height = 44;
+		text.notice.height = 64;
 		text.notice.font = "bold "+ text.notice.height +"px sans-serif";
 		text.notice.baseline = options.text.baseline || "top";
 		text.notice.style = "pink";
 		text.notice.background = "#000";
 		
 		text.important.x = 5;
-		text.important.height = 44;
+		text.important.height = 64;
 		text.important.font = "bold "+ text.important.height +"px sans-serif";
 		text.important.baseline = options.text.baseline || "top";
 		text.important.style = "#000";
@@ -160,19 +160,19 @@ var PROMPTER = function(options){
 			var currentX = text.base.x + caret.width;
 			
 			//only show lines that are on the screen
-			if(scrollY > 0 - text.base.height){
+			if(scrollY > 0 - (text.base.height * 1.25) && scrollY < height + text.base.height){
 				
-				for(var word in scriptText[line]){
-
-					//setup text: 
+				for(var word in scriptText[line]){					
+					//if the text has a background, draw it:
+					scriptContext.fillStyle = text[scriptText[line][word].class].background;
+					scriptContext.fillRect(currentX, scrollY + (text[scriptText[line][word].class].height*0.1), scriptText[line][word].width,(text[scriptText[line][word].class].height*1.1));
 					
+					//setup text: 
 					scriptContext.font = text[scriptText[line][word].class].font;
 					scriptContext.fillStyle = text[scriptText[line][word].class].style;
 					scriptContext.textBaseline = text[scriptText[line][word].class].baseline;
 					
-					/*
-					 * need to implement BG coloring.
-					 */					
+					//draw the text			
 					scriptContext.fillText(scriptText[line][word].word, currentX, scrollY);
 					currentX+=scriptText[line][word].width;
 				}
@@ -182,7 +182,7 @@ var PROMPTER = function(options){
 			if(scrollY > height){
 				continue;
 			}
-			lineOffsetY += text.base.height;	
+			lineOffsetY += (text.base.height*1.1);	
 			
 		}
 		
@@ -216,7 +216,9 @@ var PROMPTER = function(options){
 			paused = !paused;
 		},
 		getScript: function(){
-			getRemoteScript(options.script.url, true);
+			var temp = getRemoteScript(options.script.url, true);
+			console.log(temp);
+			script = scriptify(temp);
 		},
 		increaseSpeed: function(){
 			scrollSpeed -= 1;
@@ -229,10 +231,7 @@ var PROMPTER = function(options){
 			paused = true;
 			scrollSpeed = -1;
 		},
-		scriptify: function(){
-			console.log(scriptify(script));
-			
-		},
+
 	}
 
 	//utility stuff here
@@ -272,32 +271,53 @@ var PROMPTER = function(options){
 	}
 	
 	function getLines(width, script){
-
 		//seperate obj to keep track of lines.
 		var lines = {};
-		
 		
 		//seomthing to keep track of line width
 		var lineWidth = 0;
 		
-		//counter
+		//counters
 		var i = 0;
+		var lastClass = "base";
 		
 		for(word in script){
-			lines[i] = lines[i] || {};
-			lines[i][word] = script[word];
-			
-			scriptContext.font = text[script[word].class].font || text.base.font;
-			scriptContext.fillStyle = text[script[word].class].style;
-			scriptContext.textBaseline = text[script[word].class].baseline;
-			
-			lines[i][word].width = scriptContext.measureText(script[word].word).width
-			lineWidth+= lines[i][word].width;
-			//if we are close to the edge, newline.
-			if(lineWidth >= width - 20){
+			//we need a way to start a new line
+			var carriageReturn = function(){
 				i++;
 				lineWidth = 0;
 			}
+			
+			//what kind of text are we working with here?
+			var wordClass = script[word].class;
+			
+			//if the class changes to from important to something else or vice versa, newline
+			if(lastClass != "important" && wordClass === 'important'){
+				carriageReturn();
+			}
+			if(lastClass === "important" && wordClass != "important"){
+				carriageReturn();
+			}
+			
+			
+			lines[i] = lines[i] || {};
+			lines[i][word] = script[word];
+			
+			//we've got to measeure the text with the appropriate font.
+			scriptContext.font = text[wordClass].font || text.base.font;
+			scriptContext.fillStyle = text[wordClass].style;
+			scriptContext.textBaseline = text[wordClass].baseline;
+			
+			//measure and store width
+			lines[i][word].width = scriptContext.measureText(script[word].word).width
+			lineWidth+= lines[i][word].width;
+			
+			//if we are close to the edge, newline.
+			if(lineWidth >= width - (0.25*width)){
+				carriageReturn();
+			}
+			
+			lastClass = wordClass;
 		}
 		console.log(lines);
 		return lines;
@@ -307,6 +327,8 @@ var PROMPTER = function(options){
 	 * convert the script string to an object that we can more easily process into a preetty script.
 	 */
 	function scriptify(scriptString){
+		
+		scriptString = scriptString || "canvas prompter ... http://www.github.com/jakecarpenter";
 		
 		var script = {};
 		
@@ -325,7 +347,6 @@ var PROMPTER = function(options){
 			* [IMPORTANT] : Implies Invert & Line Break
 			* 
 			*/
-			
 
 			//check for an open << tag
 			if(tempArray[i].search(/<{2}/im) >= 0){
@@ -341,7 +362,8 @@ var PROMPTER = function(options){
 			if(tempArray[i].search(/\[/img) >= 0){
  				wordClass = "important";
 			}
-				
+			
+			//add the class and word to the line
 			if(tempArray[i] != ""){
 				script[i] = {
 					'word': "" + tempArray[i],
@@ -383,6 +405,9 @@ var PROMPTER = function(options){
 		
 		xmlHttp.open("GET", url, true); 
 		xmlHttp.send(null);	
+		
+		//since we are getting a new script, we need to tell the render the old one is stale.
+		scriptStale = true;
 	} 
 
 	//view stuff here
