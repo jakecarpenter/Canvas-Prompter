@@ -22,14 +22,13 @@ var PROMPTER = function(options){
 		options.script = options.script || {};
 	
 	//first, what text are we showing the user?
-	var script = options.script.text || 
-	"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed augue sem,"+
+	var script = scriptify("Lorem <<ipsum>> dolor {sit} amet, [*** consectetur adipiscing elit. ***] Sed augue sem,"+
 	"porta id pharetra sit amet, dignissim egestas orci. Duis iaculis luctus"+
 	"vehicula. Fusce orci sapien, pharetra ac molestie eu, tincidunt sed ipsum. "+
 	"Integer sit amet dolor eu est viverra ultrices. Suspendisse potenti. "+
 	"Nullam semper neque quis odio laoreet consectetur egestas eros pretium. "+
 	"Praesent accumsan dictum pretium. Morbi tristique nulla sit amet nisl "+
-	"lacinia et cursus neque molestie. ";
+	"lacinia et cursus neque molestie. ");
 	
 	//orietation is for tablet devices.
 	var orientation = options.orientation || 90;
@@ -38,13 +37,36 @@ var PROMPTER = function(options){
 	var width = options.width || 900;
 	var height = options.height || 650;
 	
-	//initial text settings, can be changed anytime.
-	var text = options.text || {};
-		text.x = 5;
-		text.height = 44;
-		text.font = options.text.font || "bold "+ text.height +"px sans-serif";
-		text.baseline = options.text.baseline || "top";
-		text.style = "#fff";
+	//initial text settings, can be changed anytime. classes are base, information, notice, important
+	var text =  {base:{},information:{},notice:{},important:{}};
+		text.base.x = 5;
+		text.base.height = 44;
+		text.base.font = "bold "+ text.base.height +"px sans-serif";
+		text.base.baseline = options.text.baseline || "top";
+		text.base.style = "#fff";
+		text.base.background = "#000";
+		
+		text.information.x = 5;
+		text.information.height = 44;
+		text.information.font = "bold "+ text.information.height +"px sans-serif";
+		text.information.baseline = options.text.baseline || "top";
+		text.information.style = "yellow";
+		text.information.background = "#000";
+		
+		text.notice.x = 5;
+		text.notice.height = 44;
+		text.notice.font = "bold "+ text.notice.height +"px sans-serif";
+		text.notice.baseline = options.text.baseline || "top";
+		text.notice.style = "pink";
+		text.notice.background = "#000";
+		
+		text.important.x = 5;
+		text.important.height = 44;
+		text.important.font = "bold "+ text.important.height +"px sans-serif";
+		text.important.baseline = options.text.baseline || "top";
+		text.important.style = "#000";
+		text.important.background = "#fff";
+		
 
 	//caret/guidline setup.
 	var caret = options.caret || {};
@@ -108,9 +130,10 @@ var PROMPTER = function(options){
 	var scrollSpeed = -1;
 	
 	//draw is where the magic happens.
-	function draw(){
+	var draw = function(){
 		
 		if(overlayStale == true){
+			//clean the slate if something has changed.
 			overlayContext.clearRect(0,0,width, height);
 			
 			//if we're using a caret, draw it.
@@ -123,31 +146,43 @@ var PROMPTER = function(options){
 		}
 		
 		if(scriptStale === true){
-			scriptText = getLines(width - caret.width - 10, scriptify(script,500));
+			scriptText = getLines(width - caret.width - 10, script);
 			scriptStale = false;
 		}
 		
 		//clear the canvas
 		scriptContext.clearRect(0,0,width, height);
-		
-		//setup text: 
-		scriptContext.font = text.font;
-		scriptContext.fillStyle = text.style;
-		scriptContext.textBaseline = text.baseline;
 
 		var lineOffsetY = 0;
-		
+
 		for(var line in scriptText){
 			var scrollY =  scrollPosY + lineOffsetY;
+			var currentX = text.base.x + caret.width;
 			
 			//only show lines that are on the screen
-			if(scrollY > 0 - text.height){
-				scriptContext.fillText(scriptText[line], text.x + caret.width, scrollY);
+			if(scrollY > 0 - text.base.height){
+				
+				for(var word in scriptText[line]){
+
+					//setup text: 
+					
+					scriptContext.font = text[scriptText[line][word].class].font;
+					scriptContext.fillStyle = text[scriptText[line][word].class].style;
+					scriptContext.textBaseline = text[scriptText[line][word].class].baseline;
+					
+					/*
+					 * need to implement BG coloring.
+					 */					
+					scriptContext.fillText(scriptText[line][word].word, currentX, scrollY);
+					currentX+=scriptText[line][word].width;
+				}
+				//scriptContext.fillText(scriptText[line], text.x + caret.width, scrollY);
+				
 			}
 			if(scrollY > height){
 				continue;
 			}
-			lineOffsetY += text.height;	
+			lineOffsetY += text.base.height;	
 			
 		}
 		
@@ -236,106 +271,92 @@ var PROMPTER = function(options){
 		overlayContext.fill();
 	}
 	
-	/**
-	 * 			OLD OLD OLD OLD OLD 
-	 * 
-	 * This stuff is borrowed from a stack overflow answer: http://stackoverflow.com/questions/2936112/text-wrap-in-a-canvas-element
-	 * originally answered by mizar and edited by Paul Woolcock
-	 * Divide an entire phrase in an array of phrases, all with the max pixel length given.
-	 * The words are initially separated by the space char.
-	 * @param phrase
-	 * @param length
-	 * @return
-	 *
-	var textLines = function (phrase,maxPxLength) {
-	    var wordArray = phrase.split(" "),
-	        phraseArray=[],
-	        lastPhrase="",
-	        l=maxPxLength,
-	        measure=0;
-	        
-	    for (var i=0;i<wordArray.length;i++) {
-	        
-	        var word=wordArray[i];
-	        
-	        measure=scriptContext.measureText(lastPhrase+word).width;
-	        	        
-	        if (measure<l) {
-	            lastPhrase+=(" "+word);
-	        }
-	        else {
-	            phraseArray.push(lastPhrase);
-	            lastPhrase=word;
-	        }
-	        
-	        if (i===wordArray.length-1) {
-	            phraseArray.push(lastPhrase);
-	            break;
-	        }
-	    }
-	    
-	    
-	    return phraseArray;
-	}
-	*/
-	
 	function getLines(width, script){
+
 		//seperate obj to keep track of lines.
 		var lines = {};
-		var i = 0;
-		for(word in script){
-			//alert(word.word);
-			lines[0] = script[word].word;
-		}
 		
+		
+		//seomthing to keep track of line width
+		var lineWidth = 0;
+		
+		//counter
+		var i = 0;
+		
+		for(word in script){
+			lines[i] = lines[i] || {};
+			lines[i][word] = script[word];
+			
+			scriptContext.font = text[script[word].class].font || text.base.font;
+			scriptContext.fillStyle = text[script[word].class].style;
+			scriptContext.textBaseline = text[script[word].class].baseline;
+			
+			lines[i][word].width = scriptContext.measureText(script[word].word).width
+			lineWidth+= lines[i][word].width;
+			//if we are close to the edge, newline.
+			if(lineWidth >= width - 20){
+				i++;
+				lineWidth = 0;
+			}
+		}
+		console.log(lines);
 		return lines;
 	}
 	
 	/*
 	 * convert the script string to an object that we can more easily process into a preetty script.
-	 * it requires a valid script context to measure the words, so we'll us the script context.
 	 */
-	function scriptify(scriptString, lineWidth){
-		var lineWidth = lineWidth || width;
+	function scriptify(scriptString){
 		
 		var script = {};
 		
 		//split the string on spaces
-		var tempArray = scriptString.split(" ");
+		var tempArray = scriptString.split(/( |<<|>>|\[|\]|\{|\})/im);
+		
+		//set the default world class.
+		var wordClass = "base";
 		
 		for(var i = 0 ; i < tempArray.length; i++){
-			script[i] = {
-				'word': " " + tempArray[i],
-				//take the word and measure it, and store that.
-				'width': scriptContext.measureText(" " + tempArray[i]).width,
-			};
+			/*determine the script class
+			* << starts INFO >>: Yellow Text
+			* 
+			* {is NOTICE} : Invert, no Line break
+			* 
+			* [IMPORTANT] : Implies Invert & Line Break
+			* 
+			*/
+			
+
+			//check for an open << tag
+			if(tempArray[i].search(/<{2}/im) >= 0){
+ 				wordClass = "information";
+			}
+			
+			//check for an open { tag
+			if(tempArray[i].search(/\{/img) >= 0){
+ 				wordClass = "notice";
+			}
+			
+			//check for an open [ tag
+			if(tempArray[i].search(/\[/img) >= 0){
+ 				wordClass = "important";
+			}
+				
+			if(tempArray[i] != ""){
+				script[i] = {
+					'word': "" + tempArray[i],
+					'class': wordClass,
+				}			
+			}
+			
+			//if we recieve an end tag, go back to base class  
+			if(tempArray[i].search(/\}|>>|\]/) >= 0){
+ 				wordClass = "base";
+			}	
+
 			
 		}
 		
-		//divide the words into lines
-		var lines = {};
-		var i = 0;
-		
-		//a place to build our line
-		var line = {};
-		
-		for(var word in script){
-			if(line.width <= lineWidth){
-				line.text = line.text + script[word].word;
-				line.width = line.width + script[word].width;
-			}
-			else {
-				lines[i] = line;
-				line = {};
-				i++;
-				line.text = line.text + script[word].word;
-				line.width = script[word].width;
-			}	
-		}
-		console.log("lines:");
-		console.log(lines);
-		console.log("script:");
-		console.log(script);
 		//return the processed object
 		return script;
 	}
