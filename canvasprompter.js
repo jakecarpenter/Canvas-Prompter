@@ -203,6 +203,7 @@ var PROMPTER = function (options) {
 	
 	//a function to set the canvas size, at anytime
 	var setCanvasSize = function(newWidth, newHeight){
+		
 		overlayCanvas.setAttribute('height',newHeight);
 		overlayCanvas.setAttribute('width',newWidth);
 		
@@ -252,7 +253,7 @@ var PROMPTER = function (options) {
 			scrollSpeed = -1;
 		},
 		maximize: function(){
-			setCanvasSize(window.document.width,window.document.height);
+			setCanvasSize(document.body.clientWidth,document.body.clientHeight);
 			overlayStale = true;
 			scriptStale = true;
 			console.log(height);
