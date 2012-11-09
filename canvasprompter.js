@@ -2,17 +2,15 @@ var PROMPTER = function (options) {
 	//if no options, great we'll do it all by ourself.
 	var options = options || {};
 	
-	//options.text = options.text || {},
-	//options.caret = options.caret || {},
-	options.keys = options.keys || {
+	var keys = options.keys || {
 		//setup the default keys.
 		// x = 88, y = 89, 32 = space, 38 = up, u = 85, i = 73
-		88: "flipHorizontal",
-		89: "flipVertical",
-		32: "stopStart",
-		39: "getScript",
-		85: "decreaseFontSize", //not yet implemented
-		73: "increaseFontSize", //not yet implemented
+		88: "flipHorizontal", // x
+		89: "flipVertical", // y
+		32: "stopStart", // space bar
+		39: "getScript", // right arrow
+		85: "decreaseFontSize", // u
+		73: "increaseFontSize", // i
 		187: 'increaseSpeed',
 		189: 'decreaseSpeed',
 		27: 'resetScript',
@@ -20,17 +18,12 @@ var PROMPTER = function (options) {
 		83: 'scriptify',
 		77: 'maximize' //make the prompter full window.
 	};
-		
-	options.script = options.script || {};
 	
+	//how often do we redraw: (in milliseconds)
+	var frameRate = 40;
+		
 	//first, what text are we showing the user?
-	var script = scriptify("Lorem <<ipsum>> dolor {sit} amet, [*** consectetur adipiscing elit. ***] Sed augue sem," +
-	"porta id pharetra sit amet, dignissim egestas orci. Duis iaculis luctus" +
-	"vehicula. Fusce orci sapien, pharetra ac molestie eu, tincidunt sed ipsum. " +
-	"Integer sit amet dolor eu est viverra ultrices. Suspendisse potenti. " +
-	"Nullam semper neque quis odio laoreet consectetur egestas eros pretium. " +
-	"Praesent accumsan dictum pretium. Morbi tristique nulla sit amet nisl " +
-	"lacinia et cursus neque molestie. ");
+	var script = scriptify("no script loaded.");
 	
 	//orietation is for tablet devices.
 	var orientation = options.orientation || 90;
@@ -84,10 +77,7 @@ var PROMPTER = function (options) {
 		caret.height = 40;
 		caret.width = 40;
 		caret.visible = true;
-		
-	//key setup
-	var keys = options.keys;
-	
+
 	//if there was a container element specified, use it, otherwise make our own
 	var containerElement = options.container || function(){
 		var c = document.createElement('div');
@@ -95,13 +85,6 @@ var PROMPTER = function (options) {
 		document.body.appendChild(c);
 		return c;
 	}();
-	
-	//we start out paused.
-	var paused = true;
-	
-	//we need to know if our overlay or script setup has changed and needs a redraw (ie, its stale)
-	var overlayStale = true;
-	var scriptStale = true;
 	
 	//we're going to use two canvases, one for the script text, and one for the overlay.		
 			
@@ -132,6 +115,12 @@ var PROMPTER = function (options) {
 	var overlayContext = overlayCanvas.getContext('2d');
 	
 	//drawing/refreshing stuff here
+	//we start out paused.
+	var paused = true;
+	
+	//we need to know if our overlay or script setup has changed and needs a redraw (ie, its stale)
+	var overlayStale = true;
+	var scriptStale = true;
 	
 	//position of top of text while scrolling
 	var scrollPosY = 0;
@@ -237,9 +226,7 @@ var PROMPTER = function (options) {
 			paused = !paused;
 		},
 		getScript: function(){
-			var temp = getRemoteScript(options.script.url, true);
-			console.log(temp);
-			script = scriptify(temp);
+			script = scriptify(getRemoteScript(options.script.url, true));
 		},
 		increaseSpeed: function(){
 			scrollSpeed -= 1;
@@ -269,7 +256,7 @@ var PROMPTER = function (options) {
 			text.notice.font = "bold "+ text.notice.height +"px sans-serif";
 			text.important.font = "bold "+ text.important.height +"px sans-serif";
 
-			
+			//we changed something, so need to remeasure, redraw
 			scriptStale = true;
 		},
 		decreaseFontSize: function(){
@@ -281,14 +268,15 @@ var PROMPTER = function (options) {
 			text.information.font = "bold "+ text.information.height +"px sans-serif";
 			text.notice.font = "bold "+ text.notice.height +"px sans-serif";
 			text.important.font = "bold "+ text.important.height +"px sans-serif";
-			scriptStale = true;
 			
+			//we changed something, so need to remeasure, redraw
+			scriptStale = true;
 		}
 
 	}
 
 	//utility stuff here
-	function getXMLHttp() {
+	var getXMLHttp = function() {
 	  var xmlHttp;
 	
 	  try {
@@ -313,7 +301,7 @@ var PROMPTER = function (options) {
 	  return xmlHttp;
 	}
 	
-	function drawCaret(){
+	drawCaret = function(){
 		//draw a caret
 		overlayContext.fillStyle = caret.color;
 		overlayContext.beginPath();
@@ -323,7 +311,7 @@ var PROMPTER = function (options) {
 		overlayContext.fill();
 	}
 	
-	function getLines(width, script){
+	getLines = function(width, script){
 		//seperate obj to keep track of lines.
 		var lines = {};
 		
@@ -480,10 +468,10 @@ var PROMPTER = function (options) {
 	};
 	
 	//initialization code.
-	function init(){
+	var init = function(){
 		document.onkeydown = handleKeyPress;
 
-		window.setInterval(draw, 30);
+		window.setInterval(draw, frameRate);
 	};
 	
 	init();
