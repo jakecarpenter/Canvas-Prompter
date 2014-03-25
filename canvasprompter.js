@@ -1,8 +1,12 @@
 var PROMPTER = function (options) {
-	//if no options, great we'll do it all by ourself.
-	var options = options || {};
+	//declare our variables.
+	var options, keys, frameRate, script, orientation, width, height, text, caret, paused, overlayStale, scriptStale,
+	scrollPosY, scrollSpeed, containerElement, scriptCanvas, scriptContext, overlayCanvas, overlayContext, draw, scriptify;
 	
-	var keys = options.keys || {
+	//if no options, great we'll do it all by ourself.
+	options = options || {};
+	
+	keys = options.keys || {
 		//setup the default keys.
 		// x = 88, y = 89, 32 = space, 38 = up, u = 85, i = 73
 		88: "flipHorizontal", // x
@@ -20,20 +24,20 @@ var PROMPTER = function (options) {
 	};
 	
 	//how often do we redraw: (in milliseconds)
-	var frameRate = 40;
+	frameRate = 40;
 		
 	//first, what text are we showing the user?
-	var script = scriptify("no script loaded.");
+	script = scriptify("no script loaded.");
 	
 	//orietation is for tablet devices.
-	var orientation = options.orientation || 90;
+	orientation = options.orientation || 90;
 	
 	//default width & height, get monkeyed with when orientation changes.
-	var width = options.width || 900;
-	var height = options.height || 650;
+	width = options.width || 900;
+	height = options.height || 650;
 	
 	//initial text settings, can be changed anytime. classes are base, information, notice, important
-	var text = {
+	text = {
 			base: {},
 			information: {},
 			notice: {},
@@ -70,7 +74,7 @@ var PROMPTER = function (options) {
 		
 
 	//caret/guidline setup.
-	var caret = {};
+	caret = {};
 		caret.color = "yellow";
 		caret.x = 10;
 		caret.y = 200;
@@ -79,7 +83,7 @@ var PROMPTER = function (options) {
 		caret.visible = true;
 
 	//if there was a container element specified, use it, otherwise make our own
-	var containerElement = options.container || function(){
+	containerElement = options.container || function(){
 		var c = document.createElement('div');
 		c.setAttribute('id', 'prompterContainer');
 		document.body.appendChild(c);
@@ -89,7 +93,7 @@ var PROMPTER = function (options) {
 	//we're going to use two canvases, one for the script text, and one for the overlay.		
 			
 	// script canvas element stuff.
-	var scriptCanvas = options.scriptCanvas || function(){
+	scriptCanvas = options.scriptCanvas || function(){
 		var c = document.createElement('canvas');
 		c.setAttribute('id', 'scriptCanvas');
 		c.setAttribute('class', 'scriptCan');
@@ -99,10 +103,10 @@ var PROMPTER = function (options) {
 		return c;
 	}();
 				
-	var scriptContext = scriptCanvas.getContext('2d');
+	scriptContext = scriptCanvas.getContext('2d');
 	
 	// overlay canvas element stuff.
-	var overlayCanvas = options.overlayCanvas || function(){
+	overlayCanvas = options.overlayCanvas || function(){
 		var c = document.createElement('canvas');
 		c.setAttribute('id', 'overlayCanvas');
 		c.setAttribute('class', 'overlayCan');
@@ -112,22 +116,22 @@ var PROMPTER = function (options) {
 		return c;
 	}();
 				
-	var overlayContext = overlayCanvas.getContext('2d');
+	overlayContext = overlayCanvas.getContext('2d');
 	
 	//drawing/refreshing stuff here
 	//we start out paused.
-	var paused = true;
+	paused = true;
 	
 	//we need to know if our overlay or script setup has changed and needs a redraw (ie, its stale)
-	var overlayStale = true;
-	var scriptStale = true;
+	overlayStale = true;
+	scriptStale = true;
 	
 	//position of top of text while scrolling
-	var scrollPosY = 0;
-	var scrollSpeed = -1;
+	scrollPosY = 0;
+	scrollSpeed = -1;
 	
 	//draw is where the magic happens.
-	var draw = function(){
+	draw = function(){
 		
 		if(overlayStale == true){
 			//clean the slate if something has changed.
@@ -471,7 +475,7 @@ var PROMPTER = function (options) {
 	var init = function(){
 		document.onkeydown = handleKeyPress;
 
-		window.setInterval(draw, frameRate);
+		window.setInterval(requestAnimationFrame(draw), frameRate);
 	};
 	
 	init();
