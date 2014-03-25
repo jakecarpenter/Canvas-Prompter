@@ -475,7 +475,10 @@ var PROMPTER = function (options) {
 	var init = function(){
 		document.onkeydown = handleKeyPress;
 
-		window.setInterval(requestAnimationFrame(draw), frameRate);
+		var animate = function(){
+			requestAnimationFrame(draw);
+			window.setTimeout(animate, frameRate);			
+		}();
 	};
 	
 	init();
