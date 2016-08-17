@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <title>Simple Prompter</title>
+
+    <style type="text/css">
+      body {
+        overflow: hidden;
+      }
+      canvas {
+      	position: absolute;
+    		top: 0px;
+    		left:0px;
+          	/**/
+          }
+
+      .scriptCan {
+      	background-color: black;
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <script type="text/javascript" src="canvasprompter.js"></script>
+    <script type="text/javascript">
+      //what do we need on the renderer?
+      const ipc = require('electron').ipcRenderer
+      const fs = require('fs')
+
+    	//now, create the prompter
+    	var prompter = new PROMPTER();
+
+      //set it to screen size
+      prompter.maximize();
+
+      //make sure it stays the right size.
+      window.addEventListener('resize', function(e){
+        prompter.maximize();
+      });
+
+      //controls`
+      window.addEventListener('wheel', function(event){
+        console.log(event.deltaY)
+        if(!event){return false;}
+        event.preventDefault();
+        if(event.deltaY < 0){
+          prompter.controls.decreaseSpeed()
+        }
+        else if (event.deltaY > 0) {
+          prompter.controls.increaseSpeed()
+        }
+      })
+
+      //handle open script request
+      prompter.onScriptOpen(function(){
+        ipc.send('open-file-dialog');
+      })
+
+      //what to do if we get a new script?
+      ipc.on('selected-file', function(event, filepath){
+        fs.readFile(filepath[0], 'utf-8', function (err, data) {
+          if(err){
+              alert("An error ocurred reading the file :" + err.message);
+              return;
+          }
+          // Change how to handle the file content
+          prompter.setScript(data);
+        })
+
+      })
+    </script>
+  </body>
+
+</html>
