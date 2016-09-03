@@ -1,12 +1,8 @@
-RegExp.escape= function(s) {
-    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-};
-
 var PROMPTER = function (options) {
 	//declare our variables.
-	var options, keys, frameRate, script, orientation, width, height, textStyles = {}, textClasses = {}, caret = {}, paused, overlayStale, scriptStale,
+	var options, keys, frameRate, script, orientation, width, height, text, caret, paused, overlayStale, scriptStale,
 	scrollPosY, scrollSpeed, containerElement, scriptCanvas, scriptContext, overlayCanvas, overlayContext, draw, scriptify,
-	scriptOpen, readline = 20, readlineY, scriptHeight, lineHeight, currentLine = "9999999999999", numLines = 0;
+	scriptOpen;
 
 	//if no options, great we'll do it all by ourself.
 	options = options || {};
@@ -25,15 +21,7 @@ var PROMPTER = function (options) {
 		86: 'resetScript',
 		83: 'scriptify',
 		77: 'maximize', //make the prompter full window.
-		78: 'toggleCaret',
-		36: 'scriptHome',
-		35: 'scriptEnd',
-		70: 'bigForwardStep',
-		71: 'littleForwardStep',
-		72: 'littleBackwardStep',
-		74: 'bigBackwardStep',
-		34: 'nextMarker',
-		33: 'lastMarker'
+		78: 'toggleCaret'
 	};
 
 	//how often do we redraw: (in milliseconds)
@@ -50,47 +38,51 @@ var PROMPTER = function (options) {
 	height = options.height || 650;
 
 	//initial text settings, can be changed anytime. classes are base, information, notice, important
-	addTextStyle = function(name, style){
+	text = {
+			base: {},
+			information: {},
+			notice: {},
+			important: {}
+		};
 
-		var newStyle = {};
-		//make sure we have the impartnat parts.
-		if(!style.hasOwnProperty('height') ||
-			 !style.hasOwnProperty('color') ||
-			 !style.hasOwnProperty('background' ||
-		 	 name == undefined)) {
-			return false;
-		}
-		var weight = (style.hasOwnProperty('weight') && style.weight != undefined)? style.weight : "bold";
-		var font = (style.hasOwnProperty('font') && style.font != undefined)? style.font : "sans-serif";
-		newStyle.x = 5;
-		newStyle.height = style.height;
-		newStyle.font = weight + " " + style.height + "px " + font;
-		newStyle.style = style.color;
-		newStyle.background = style.background;
-		textStyles[name] = newStyle;
-	}
+		text.base.x = 5;
+		text.base.height = 64;
+		text.base.font = "bold "+ text.base.height +"px sans-serif";
+		text.base.baseline =  "top";
+		text.base.style = "#fff";
+		text.base.background = "#000";
 
-	//text classes
-	addTextClass = function(name, klass) {
-		if(!klass.hasOwnProperty('start') ||
-			 !klass.hasOwnProperty('end') ||
-			 !klass.hasOwnProperty('style' ||
-		 	 name == undefined)) {
-			return false;
-		}
+		text.information.x = 5;
+		text.information.height = 64;
+		text.information.font = "bold "+ text.information.height +"px sans-serif";
+		text.information.baseline = "top";
+		text.information.style = "yellow";
+		text.information.background = "#000";
 
-		textClasses[name] = klass;
-	}
-	//addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
-//caret/guidline setup.
-	setupCaret = function(cOptions){
-			caret.color = caret.color || cOptions.color || "yellow";
-			caret.x = caret.x || cOptions.x || 10;
-			caret.y = readlineY || 0;
-			caret.height = caret.height || cOptions.height || 40;
-			caret.width = caret.width || cOptions.width || 40;
-			caret.visible = caret.visible || cOptions.visible || true;
-	}
+		text.notice.x = 5;
+		text.notice.height = 64;
+		text.notice.font = "bold "+ text.notice.height +"px sans-serif";
+		text.notice.baseline = "top";
+		text.notice.style = "pink";
+		text.notice.background = "#000";
+
+		text.important.x = 5;
+		text.important.height = 64;
+		text.important.font = "bold "+ text.important.height +"px sans-serif";
+		text.important.baseline = "top";
+		text.important.style = "#000";
+		text.important.background = "#fff";
+
+
+	//caret/guidline setup.
+	caret = {};
+		caret.color = "yellow";
+		caret.x = 10;
+		caret.y = 200;
+		caret.height = 40;
+		caret.width = 40;
+		caret.visible = true;
+
 	//if there was a container element specified, use it, otherwise make our own
 	containerElement = options.container || function(){
 		var c = document.createElement('div');
@@ -102,7 +94,7 @@ var PROMPTER = function (options) {
 	//we're going to use two canvases, one for the script text, and one for the overlay.
 
 	// script canvas element stuff.
-	scriptCanvas = function(){
+	scriptCanvas = options.scriptCanvas || function(){
 		var c = document.createElement('canvas');
 		c.setAttribute('id', 'scriptCanvas');
 		c.setAttribute('class', 'scriptCan');
@@ -112,8 +104,10 @@ var PROMPTER = function (options) {
 		return c;
 	}();
 
+	scriptContext = scriptCanvas.getContext('2d');
+
 	// overlay canvas element stuff.
-	overlayCanvas = function(){
+	overlayCanvas = options.overlayCanvas || function(){
 		var c = document.createElement('canvas');
 		c.setAttribute('id', 'overlayCanvas');
 		c.setAttribute('class', 'overlayCan');
@@ -123,7 +117,6 @@ var PROMPTER = function (options) {
 		return c;
 	}();
 
-	scriptContext = scriptCanvas.getContext('2d');
 	overlayContext = overlayCanvas.getContext('2d');
 
 	//drawing/refreshing stuff here
@@ -141,15 +134,12 @@ var PROMPTER = function (options) {
 	//draw is where the magic happens.
 	draw = function(){
 		if(overlayStale == true){
-			//reset the caret
-			setupCaret()
 			//clean the slate if something has changed.
 			overlayContext.clearRect(0,0,width, height);
 
 			//if we're using a caret, draw it.
 			if(caret.visible == true) {
 				drawCaret();
-				drawReadlines();
 			}
 
 			//we've redrawn/refigured the overlay, so its no longer stale
@@ -158,18 +148,8 @@ var PROMPTER = function (options) {
 
 		if(scriptStale === true){
 			scriptText = getLines(width - caret.width - 10, script);
-			controls.scriptHome();
 			scriptStale = false;
 		}
-
-		//if we are at the beginning or end of text, stop
-		if(scrollPosY > readlineY + lineHeight/2){
-			scrollPosY = readlineY + lineHeight/2;
-		}
-		if(scrollPosY < -scriptHeight + readlineY + lineHeight){
-			scrollPosY = -scriptHeight + readlineY + lineHeight;
-		}
-
 
 		//clear the canvas
 		scriptContext.clearRect(0,0,width, height);
@@ -178,43 +158,20 @@ var PROMPTER = function (options) {
 
 		for(var line in scriptText){
 			var scrollY =  scrollPosY + lineOffsetY;
-			var currentX = textStyles["base"].x + caret.width;
-
-
+			var currentX = text.base.x + caret.width;
 
 			//only show lines that are on the screen
-			if(scrollY > height + (textStyles["base"].height * 1.25)){
-				continue;
-			}
-			if(
-				scrollY > 0 - (textStyles["base"].height * 1.25) && //top of text
-				scrollY < height + textStyles["base"].height //bottom of text
-			){
-
-			//determine if this line is at the readline. if so, log it
-			if(scrollY < readlineY + lineHeight / 2 && scrollY > readlineY - lineHeight / 2){
-				if(currentLine != line){
-					// console.log(scriptText[line]) // this would be for CC
-					// console.log((line / numLines) * 100) // this shows percentate
-					currentPercentComplete = (line / numLines) * 100
-					currentLine = line
-				}
-			}
-
+			if(scrollY > 0 - (text.base.height * 1.25) && scrollY < height + text.base.height){
 
 				for(var word in scriptText[line]){
-					// if the word is a space, skip it.
-					if(scriptText[line][word].word == " " && +word == 0){
-						continue;
-					}
 					//if the text has a background, draw it:
-					scriptContext.fillStyle = textStyles[scriptText[line][word].class].background;
-					scriptContext.fillRect(currentX, scrollY + (textStyles[scriptText[line][word].class].height*0.1), scriptText[line][word].width,(textStyles[scriptText[line][word].class].height*1.1));
+					scriptContext.fillStyle = text[scriptText[line][word].class].background;
+					scriptContext.fillRect(currentX, scrollY + (text[scriptText[line][word].class].height*0.1), scriptText[line][word].width,(text[scriptText[line][word].class].height*1.1));
 
 					//setup text:
-					scriptContext.font = textStyles[scriptText[line][word].class].font;
-					scriptContext.fillStyle = textStyles[scriptText[line][word].class].style;
-					scriptContext.textBaseline = textStyles[scriptText[line][word].class].baseline;
+					scriptContext.font = text[scriptText[line][word].class].font;
+					scriptContext.fillStyle = text[scriptText[line][word].class].style;
+					scriptContext.textBaseline = text[scriptText[line][word].class].baseline;
 
 					//draw the text
 					scriptContext.fillText(scriptText[line][word].word, currentX, scrollY);
@@ -223,10 +180,18 @@ var PROMPTER = function (options) {
 				//scriptContext.fillText(scriptText[line], text.x + caret.width, scrollY);
 
 			}
-
-			lineOffsetY += textStyles["base"].height * 1.1;
+			if(scrollY > height){
+				continue;
+			}
+			lineOffsetY += (text.base.height*1.1);
 
 		}
+
+		//set the starting position for the next frame
+		if(!paused){
+			scrollPosY += scrollSpeed;
+		}
+
 	};
 
 	//a function to set the canvas size, at anytime
@@ -275,7 +240,7 @@ var PROMPTER = function (options) {
 			scrollSpeed += 1;
 		},
 		resetScript: function(){
-			scrollPosY = readlineY;
+			scrollPosY = 0;
 			paused = true;
 			scrollSpeed = -1;
 		},
@@ -283,49 +248,66 @@ var PROMPTER = function (options) {
 			setCanvasSize(document.body.clientWidth,document.body.clientHeight);
 			overlayStale = true;
 			scriptStale = true;
-			readlineY = document.body.clientHeight * (readline/100);
+			console.log(height);
 		},
 		increaseFontSize: function(){
-			for(style in textStyles){
-				textStyles[style].font = textStyles[style].font.replace(textStyles[style].height +"px", (textStyles[style].height += 2)+"px");
-			}
+			text.base.height += 2;
+			text.notice.height += 2;
+			text.information.height += 2;
+			text.important.height += 2;
+
+			text.base.font = "bold "+ text.base.height +"px sans-serif";
+			text.information.font = "bold "+ text.information.height +"px sans-serif";
+			text.notice.font = "bold "+ text.notice.height +"px sans-serif";
+			text.important.font = "bold "+ text.important.height +"px sans-serif";
+
+			//we changed something, so need to remeasure, redraw
 			scriptStale = true;
 		},
 		decreaseFontSize: function(){
-			for(style in textStyles){
-				textStyles[style].font = textStyles[style].font.replace(textStyles[style].height +"px", (textStyles[style].height -= 2)+"px");
-			}
+			text.base.height -= 2;
+			text.notice.height -= 2;
+			text.information.height -= 2;
+			text.important.height -= 2;
+			text.base.font = "bold "+ text.base.height +"px sans-serif";
+			text.information.font = "bold "+ text.information.height +"px sans-serif";
+			text.notice.font = "bold "+ text.notice.height +"px sans-serif";
+			text.important.font = "bold "+ text.important.height +"px sans-serif";
+
+			//we changed something, so need to remeasure, redraw
 			scriptStale = true;
 		},
 		toggleCaret: function(){
 			caret.visible = !caret.visible;
 			overlayStale = true;
-		},
-		scriptHome: function(){
-			scrollPosY = readlineY + (lineHeight / 2);
-		},
-		scriptEnd: function(){
-			scrollPosY = -scriptHeight + readlineY + (lineHeight * 1.4)
-		},
-		bigForwardStep: function(){
-			scrollPosY -= 6
-		},
-		littleForwardStep: function(){
-			scrollPosY -= 2
-		},
-		bigBackwardStep: function(){
-			scrollPosY += 6
-		},
-		littleBackwardStep: function(){
-			scrollPosY += 2
-		},
-		nextMarker: function(){
-
-		},
-		previousMarker: function(){
-
 		}
 
+	}
+
+	//utility stuff here
+	var getXMLHttp = function() {
+	  var xmlHttp;
+
+	  try {
+	    //good browsers
+	    xmlHttp = new XMLHttpRequest();
+	  }
+	  catch(e){
+	    //e'rthing else
+	    try {
+	      xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+	    }
+	    catch(e){
+	      try{
+	        xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+	      }
+	      catch(e){
+	        alert("Your browser does not support AJAX!");
+	        return false;
+	      }
+	    }
+	  }
+	  return xmlHttp;
 	}
 
 	drawCaret = function(){
@@ -336,17 +318,6 @@ var PROMPTER = function (options) {
 		overlayContext.lineTo(caret.x + caret.width, caret.y);
 		overlayContext.lineTo(caret.x, caret.y + (caret.height/2));
 		overlayContext.fill();
-	}
-	drawReadlines = function(){
-		overlayContext.strokeStyle="#FFFFFF";
-		overlayContext.beginPath();
-		overlayContext.moveTo(0,readlineY - (lineHeight /2));
-		overlayContext.lineTo(width,readlineY - (lineHeight /2));
-		overlayContext.moveTo(0,readlineY);
-		overlayContext.lineTo(width,readlineY);
-		overlayContext.moveTo(0,readlineY + (lineHeight /2));
-		overlayContext.lineTo(width,readlineY + (lineHeight /2));
-		overlayContext.stroke();
 	}
 
 	getLines = function(width, script){
@@ -383,9 +354,9 @@ var PROMPTER = function (options) {
 			lines[i][word] = script[word];
 
 			//we've got to measeure the text with the appropriate font.
-			scriptContext.font = textStyles[wordClass].font || text.base.font;
-			scriptContext.fillStyle = textStyles[wordClass].style;
-			scriptContext.textBaseline = textStyles[wordClass].baseline;
+			scriptContext.font = text[wordClass].font || text.base.font;
+			scriptContext.fillStyle = text[wordClass].style;
+			scriptContext.textBaseline = text[wordClass].baseline;
 
 			//measure and store width
 			lines[i][word].width = scriptContext.measureText(script[word].word).width
@@ -398,8 +369,6 @@ var PROMPTER = function (options) {
 
 			lastClass = wordClass;
 		}
-		scriptHeight = i * (textStyles["base"].height*1.1);
-		numLines = i;
 		return lines;
 	}
 
@@ -427,33 +396,21 @@ var PROMPTER = function (options) {
 			* [IMPORTANT] : Implies Invert & Line Break
 			*
 			*/
-			var endings = [];
-			var marker = false;
-			for(var textClass in textClasses){
-				tClass = textClasses[textClass];
-				if(tClass.hasOwnProperty("start") && tClass.hasOwnProperty("end") && tClass.start != undefined && tClass.end != undefined){
-					endings.push(tClass.end)
-					 if(tempArray[i].search(new RegExp(RegExp.escape(tClass.start)), "img") >= 0){
-						 	marker = tClass.marker
-			 				wordClass = textClass;
-						}
-				}
+
+			//check for an open << tag
+			if(tempArray[i].search(/<{2}/im) >= 0){
+ 				wordClass = "information";
 			}
 
-			// //check for an open << tag
-			// if(tempArray[i].search(/<{2}/im) >= 0){
- 		// 		wordClass = "information";
-			// }
-			//
-			// //check for an open { tag
-			// if(tempArray[i].search(/\{/img) >= 0){
- 		// 		wordClass = "notice";
-			// }
-			//
-			// //check for an open [ tag
-			// if(tempArray[i].search(/\[/img) >= 0){
- 		// 		wordClass = "important";
-			// }
+			//check for an open { tag
+			if(tempArray[i].search(/\{/img) >= 0){
+ 				wordClass = "notice";
+			}
+
+			//check for an open [ tag
+			if(tempArray[i].search(/\[/img) >= 0){
+ 				wordClass = "important";
+			}
 
 			//add the class and word to the line
 			if(tempArray[i] != ""){
@@ -463,9 +420,8 @@ var PROMPTER = function (options) {
 				}
 			}
 
-			//if we recieve an end tag, go back to base class /\}|>>|\]/
-			var endExp = new RegExp(endings.join("|"))
-			if(tempArray[i].search(endExp) >= 0){
+			//if we recieve an end tag, go back to base class
+			if(tempArray[i].search(/\}|>>|\]/) >= 0){
  				wordClass = "base";
 			}
 
@@ -475,6 +431,36 @@ var PROMPTER = function (options) {
 		//return the processed object
 		return script;
 	}
+
+	function setFontSize(size){
+		text.height = size || text.height;
+		text.font = "bold "+ text.height +"px sans-serif";
+	}
+
+	//remote text fetching, set use to true or set with setText
+	// function getRemoteScript(url, use){
+	// 	var xmlHttp = getXMLHttp();
+	//
+	// 	xmlHttp.onreadystatechange = function(){
+	// 	  if(xmlHttp.readyState == 4) {
+	// 	    if(use === true){
+	// 	    	script = scriptify(xmlHttp.responseText);
+	// 	    	//since we are getting a new script, we need to tell the render the old one is stale.
+	// 			scriptStale = true;
+	// 	    }
+	// 	    else{
+  //  			    return xmlHttp.responseText;
+	// 	    }
+	// 	  }
+	// 	}
+	//
+	// 	xmlHttp.open("GET", url, true);
+	// 	xmlHttp.send(null);
+	//
+	//
+	// }
+
+	//view stuff here
 
 	//key event stuff here
 	//the commands we'll use. none by default.
@@ -492,7 +478,6 @@ var PROMPTER = function (options) {
 
 	var animate = function(){
 		requestAnimationFrame(draw);
-		!paused ? scrollPosY += scrollSpeed : null ;
 		window.setTimeout(animate, frameRate);
 	};
 
@@ -510,17 +495,7 @@ var PROMPTER = function (options) {
 	//initialization code.
 	var init = function(){
 		document.onkeydown = handleKeyPress;
-		addTextStyle("base",{"height": 64, "color": "white", "background":"black"});
-	  addTextStyle("information",{"height": 64, "color": "yellow", "background":"black"});
-	  addTextStyle("notice",{"height": 64, "color": "pink", "background":"black"});
-	  addTextStyle("important",{"height": 64, "color": "black", "background":"white"});
 
-	  addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
-	  addTextClass("notice", {"start": "{", "end": "}", "style": "information", "fullWidth": false})
-	  addTextClass("important", {"start": "[", "end": "]", "style": "information", "fullWidth": true, "marker":true})
-
-		setupCaret({"color": "green", "height": 50, "width": 50, "x": 5})
-		lineHeight = textStyles["base"].height*1.1
 		animate()
 	};
 

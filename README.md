@@ -14,6 +14,6 @@ The default controls are stupid:
 
 
 The script is plain text, and can be annotated with the following:
- * << INFO >>: Yellow, no Line break
+ * < INFO >: Yellow, no Line break
  * { NOTICE } : Pink, no Line break
  * [IMPORTANT] : Invert & Line Break
