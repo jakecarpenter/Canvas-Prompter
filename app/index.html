@@ -17,11 +17,80 @@
       	background-color: black;
       }
 
+      .animate-slide {
+        background:white;
+        position:absolute;
+        width: 100%;
+        height:50%;
+        bottom: 0;
+        left: 0;
+        -webkit-transform: translate3d(0,0,0); /* Chrome, Safari, Opera */
+        transform: translate3d(0,0,0,);
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000;
+        perspective: 1000;
+      }
+
+      .animate-slide.ng-hide-add,
+      .animate-slide.ng-hide-remove {
+        display:block!important;
+      }
+
+      .animate-slide.ng-hide-remove.ng-hide-remove-active {
+        -webkit-animation:0.5s slide-up;
+        animation:0.5s slide-up;
+      }
+
+      .animate-slide.ng-hide-add.ng-hide-add-active {
+        -webkit-animation:0.5s slide-down;
+        animation:0.5s slide-down;
+      }
+
+      .animate-slide.ng-hide {
+        top:100%;
+        display:block!important;
+      }
+
+      /* Chrome, Safari, Opera */
+      @-webkit-keyframes slide-up
+      {
+        0%   {top:100%;}
+        100%  {top:0;}
+      }
+
+      /* Standard syntax */
+      @keyframes slide-up
+      {
+        0%   {top:100%;}
+        100%  {top:0;}
+      }
+
+      /* Chrome, Safari, Opera */
+      @-webkit-keyframes slide-down
+      {
+        0%  {top:0;}
+        100%   {top:100%;}
+      }
+
+      /* Standard syntax */
+      @keyframes slide-down
+      {
+        0%  {top:0;}
+        100%   {top:100%;}
+      }
+
     </style>
   </head>
   <body>
 
     <script type="text/javascript" src="canvasprompter.js"></script>
+    <!--  angular stuffs-->
+    <script type="text/javascript" src="../node_modules/angular/angular.js"></script>
+    <script type="text/javascript" src="../node_modules/angular-animate/angular-animate.js"></script>
+    <script type="text/javascript" src="control.js"></script>
+
+    <!--  actual stuff-->
     <script type="text/javascript">
       //what do we need on the renderer?
       const ipc = require('electron').ipcRenderer
@@ -68,7 +137,14 @@
         })
 
       })
+      //SETUP THE prompter
+      prompter.init();
     </script>
+    <div ng-app="prompter">
+      <div ng-controller="SettingsController as settings" class="animate-slide" ng-show="visible">
+        {{ settings.message }}
+      </div>
+    </div>
   </body>
 
 </html>

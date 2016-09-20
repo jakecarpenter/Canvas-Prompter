@@ -4,7 +4,7 @@ RegExp.escape= function(s) {
 
 var PROMPTER = function (options) {
 	//declare our variables.
-	var options, keys, frameRate, script, orientation, width, height, textStyles = {}, textClasses = {}, caret = {}, paused, overlayStale, scriptStale,
+	var options, keys, frameRate, script, orientation, width, height, textStyles = {}, textClasses = {"base":{}}, caret = {}, paused, overlayStale, scriptStale,
 	scrollPosY, scrollSpeed, containerElement, scriptCanvas, scriptContext, overlayCanvas, overlayContext, draw, scriptify,
 	scriptOpen, readline = 20, readlineY, scriptHeight, lineHeight, currentLine = "9999999999999", numLines = 0;
 
@@ -78,7 +78,7 @@ var PROMPTER = function (options) {
 		 	 name == undefined)) {
 			return false;
 		}
-
+    klass.newline = klass.newline || false;
 		textClasses[name] = klass;
 	}
 	//addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
@@ -371,12 +371,13 @@ var PROMPTER = function (options) {
 			var wordClass = script[word].class;
 
 			//if the class changes to from important to something else or vice versa, newline
-			if(lastClass != "important" && wordClass === 'important'){
+      // console.log(lastClass, wordClass, textClasses);
+			if(lastClass != wordClass && (textClasses[wordClass].newline || textClasses[lastClass].newline)){
 				carriageReturn();
 			}
-			if(lastClass === "important" && wordClass != "important"){
-				carriageReturn();
-			}
+			// if(lastClass === "important" && wordClass != "important"){
+			// 	carriageReturn();
+			// }
 
 
 			lines[i] = lines[i] || {};
@@ -515,7 +516,7 @@ var PROMPTER = function (options) {
 	  addTextStyle("notice",{"height": 64, "color": "pink", "background":"black"});
 	  addTextStyle("important",{"height": 64, "color": "black", "background":"white"});
 
-	  addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
+    addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
 	  addTextClass("notice", {"start": "{", "end": "}", "style": "information", "fullWidth": false})
 	  addTextClass("important", {"start": "[", "end": "]", "style": "information", "fullWidth": true, "marker":true})
 
@@ -524,13 +525,13 @@ var PROMPTER = function (options) {
 		animate()
 	};
 
-	init();
 	return {
 		init: init,
 		maximize: controls.maximize,
 		updateScript: scriptify,
 		onScriptOpen: onScriptOpen,
 		setScript: setScript,
-		controls: controls
+		controls: controls,
+    keys: keys
 	};
 }
