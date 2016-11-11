@@ -73,13 +73,12 @@ var PROMPTER = function (options) {
 
 	//text classes
 	addTextClass = function(name, klass) {
-		if(!klass.hasOwnProperty('start') ||
-			 !klass.hasOwnProperty('end') ||
+		if(
 			 !klass.hasOwnProperty('style' ||
 		 	 name == undefined)) {
 			return false;
 		}
-
+    klass.newline = klass.newline || false;
 		textClasses[name] = klass;
 	}
 	//addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
@@ -431,11 +430,14 @@ var PROMPTER = function (options) {
 
 			//what kind of text are we working with here?
 			var wordClass = script[word].class;
-
 			//if the class changes to from important to something else or vice versa, newline
-			if(wordClass.fullWidth == true){
+			if((textClasses[wordClass].fullWidth == true && textClasses[lastClass].fullWidth != true) || (textClasses[wordClass].fullWidth != true && textClasses[lastClass].fullWidth == true)){
+				
 				carriageReturn();
 			}
+			// if(lastClass === "important" && wordClass != "important"){
+			// 	carriageReturn();
+			// }
 
 
 			lines[i] = lines[i] || {};
@@ -553,7 +555,8 @@ var PROMPTER = function (options) {
 	  addTextStyle("notice",{"height": 64, "color": "pink", "background":"black"});
 	  addTextStyle("important",{"height": 64, "color": "black", "background":"white"});
 
-	  addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
+	  addTextClass("base", { "style": "base", "fullWidth": false})
+	  addTextClass("notice", {"start": "{", "end": "}", "style": "information", "fullWidth": false})
 	  addTextClass("notice", {"start": "{", "end": "}", "style": "information", "fullWidth": false})
 	  addTextClass("important", {"start": "[", "end": "]", "style": "information", "fullWidth": true, "marker":true})
 
@@ -565,13 +568,13 @@ var PROMPTER = function (options) {
 		controls.toggleProgress();
 	};
 
-	init();
 	return {
 		init: init,
 		maximize: controls.maximize,
 		updateScript: scriptify,
 		onScriptOpen: onScriptOpen,
 		setScript: setScript,
-		controls: controls
+		controls: controls,
+    keys: keys
 	};
 }
