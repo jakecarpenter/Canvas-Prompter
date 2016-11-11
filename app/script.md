@@ -1,5 +1,6 @@
 I welcome these hearings because of the opportunity that they provide to the American people to better understand why the tragedy of 9/11 happened and what we must do to prevent a reoccurrence.
-I also welcome the hearings because it is finally a forum where I can apologize to the loved ones of the victims of 9/11.
+[ this is a test]
+I also welcome the [this too] hearings because it is finally a forum where I can apologize to the loved ones of the victims of 9/11.
 To them who are here in the room, to those who are watching on television, your government failed you.
 Those entrusted with protecting you failed you.
 And I failed you.

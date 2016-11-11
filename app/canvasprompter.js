@@ -4,7 +4,8 @@ RegExp.escape= function(s) {
 
 var PROMPTER = function (options) {
 	//declare our variables.
-	var options, keys, frameRate, script, orientation, width, height, textStyles = {}, textClasses = {}, caret = {}, paused, overlayStale, scriptStale,
+	var options, keys, frameRate, script, orientation, width, height, textStyles = {}, textClasses = {}, caret = {},
+	progress = {}, paused, overlayStale, scriptStale, currentPercent,
 	scrollPosY, scrollSpeed, containerElement, scriptCanvas, scriptContext, overlayCanvas, overlayContext, draw, scriptify,
 	scriptOpen, readline = 20, readlineY, scriptHeight, lineHeight, currentLine = "9999999999999", numLines = 0;
 
@@ -84,13 +85,20 @@ var PROMPTER = function (options) {
 	//addTextClass("information", {"start": "<", "end": ">", "style": "information", "fullWidth": false})
 //caret/guidline setup.
 	setupCaret = function(cOptions){
+			cOptions = cOptions || {};
 			caret.color = caret.color || cOptions.color || "yellow";
 			caret.x = caret.x || cOptions.x || 10;
 			caret.y = readlineY || 0;
 			caret.height = caret.height || cOptions.height || 40;
 			caret.width = caret.width || cOptions.width || 40;
-			caret.visible = caret.visible || cOptions.visible || true;
+			caret.visible = caret.visible || cOptions.visible;
+			caret.readline = caret.readline || cOptions.readline;
 	}
+
+	//progress indication
+	progress.text = false;
+	progress.bar = false;
+
 	//if there was a container element specified, use it, otherwise make our own
 	containerElement = options.container || function(){
 		var c = document.createElement('div');
@@ -140,6 +148,7 @@ var PROMPTER = function (options) {
 
 	//draw is where the magic happens.
 	draw = function(){
+
 		if(overlayStale == true){
 			//reset the caret
 			setupCaret()
@@ -149,8 +158,13 @@ var PROMPTER = function (options) {
 			//if we're using a caret, draw it.
 			if(caret.visible == true) {
 				drawCaret();
+			}
+			//same with readlines
+			if(caret.readline == true){
 				drawReadlines();
 			}
+
+
 
 			//we've redrawn/refigured the overlay, so its no longer stale
 			overlayStale = false;
@@ -169,6 +183,7 @@ var PROMPTER = function (options) {
 		if(scrollPosY < -scriptHeight + readlineY + lineHeight){
 			scrollPosY = -scriptHeight + readlineY + lineHeight;
 		}
+
 
 
 		//clear the canvas
@@ -209,7 +224,7 @@ var PROMPTER = function (options) {
 					}
 					//if the text has a background, draw it:
 					scriptContext.fillStyle = textStyles[scriptText[line][word].class].background;
-					scriptContext.fillRect(currentX, scrollY + (textStyles[scriptText[line][word].class].height*0.1), scriptText[line][word].width,(textStyles[scriptText[line][word].class].height*1.1));
+					scriptContext.fillRect(currentX, scrollY - (textStyles[scriptText[line][word].class].height), scriptText[line][word].width,(textStyles[scriptText[line][word].class].height*1.1));
 
 					//setup text:
 					scriptContext.font = textStyles[scriptText[line][word].class].font;
@@ -226,6 +241,16 @@ var PROMPTER = function (options) {
 
 			lineOffsetY += textStyles["base"].height * 1.1;
 
+		}
+		//update percentages.
+		getCompletion();
+				//if we want the progress bar:
+		if(progress.bar == true){
+			drawProgress();
+		}	
+		//if we want the percentage complete:
+		if(progress.text == true){
+			drawPercent();
 		}
 	};
 
@@ -300,6 +325,23 @@ var PROMPTER = function (options) {
 		toggleCaret: function(){
 			caret.visible = !caret.visible;
 			overlayStale = true;
+			return caret.visible;
+		},
+		toggleReadline: function(){
+			caret.readline = !caret.readline;
+			overlayStale = true;
+			return caret.readline;
+		},
+		toggleProgress: function(){
+			progress.bar = !progress.bar;
+			overlayStale = true;
+			
+			return progress.bar;
+		},
+		togglePercent: function(){
+			progress.text = !progress.text;
+			overlayStale = true;			
+			return progress.text;
 		},
 		scriptHome: function(){
 			scrollPosY = readlineY + (lineHeight / 2);
@@ -349,6 +391,26 @@ var PROMPTER = function (options) {
 		overlayContext.stroke();
 	}
 
+	drawProgress = function(){
+		overlayContext.fillStyle = "yellow";
+		overlayContext.clearRect(0, height - 12, width, 12);
+		overlayContext.fillRect(0, height - 12, (width * currentPercent), 12);
+	}
+
+	drawPercent = function(){
+		overlayContext.clearRect(10, height - 47, 25, 25);
+		overlayContext.font = "sans-serif";
+		overlayContext.fillStyle = "white";
+		overlayContext.fillText((Math.round(currentPercent*100)),10, height - 22, 25)
+	}
+
+	getCompletion = function(){
+		var total = Math.abs(-scriptHeight + readlineY + (lineHeight * 1.4));
+		var home = readlineY + (lineHeight / 2);
+		var current = scrollPosY - home;
+		currentPercent = Math.abs(current/total);
+	}
+
 	getLines = function(width, script){
 		//seperate obj to keep track of lines.
 		var lines = {};
@@ -371,10 +433,7 @@ var PROMPTER = function (options) {
 			var wordClass = script[word].class;
 
 			//if the class changes to from important to something else or vice versa, newline
-			if(lastClass != "important" && wordClass === 'important'){
-				carriageReturn();
-			}
-			if(lastClass === "important" && wordClass != "important"){
+			if(wordClass.fullWidth == true){
 				carriageReturn();
 			}
 
@@ -408,7 +467,7 @@ var PROMPTER = function (options) {
 	 */
 	function scriptify(scriptString){
 
-		scriptString = scriptString || "canvas prompter ... http://www.github.com/jakecarpenter";
+		scriptString = scriptString || "load a script";
 
 		var script = {};
 
@@ -420,12 +479,6 @@ var PROMPTER = function (options) {
 
 		for(var i = 0 ; i < tempArray.length; i++){
 			/*determine the script class
-			* << starts INFO >>: Yellow Text
-			*
-			* {is NOTICE} : Invert, no Line break
-			*
-			* [IMPORTANT] : Implies Invert & Line Break
-			*
 			*/
 			var endings = [];
 			var marker = false;
@@ -439,21 +492,6 @@ var PROMPTER = function (options) {
 						}
 				}
 			}
-
-			// //check for an open << tag
-			// if(tempArray[i].search(/<{2}/im) >= 0){
- 		// 		wordClass = "information";
-			// }
-			//
-			// //check for an open { tag
-			// if(tempArray[i].search(/\{/img) >= 0){
- 		// 		wordClass = "notice";
-			// }
-			//
-			// //check for an open [ tag
-			// if(tempArray[i].search(/\[/img) >= 0){
- 		// 		wordClass = "important";
-			// }
 
 			//add the class and word to the line
 			if(tempArray[i] != ""){
@@ -522,6 +560,9 @@ var PROMPTER = function (options) {
 		setupCaret({"color": "green", "height": 50, "width": 50, "x": 5})
 		lineHeight = textStyles["base"].height*1.1
 		animate()
+		controls.toggleCaret();
+		controls.togglePercent();
+		controls.toggleProgress();
 	};
 
 	init();

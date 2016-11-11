@@ -30,13 +30,64 @@
     	//now, create the prompter
     	var prompter = new PROMPTER();
 
-      //set it to screen size
+      //set it to window size
       prompter.maximize();
 
       //make sure it stays the right size.
       window.addEventListener('resize', function(e){
         prompter.maximize();
       });
+
+      //menu setup
+      const {remote} = require('electron');
+      const {Menu, MenuItem} = remote
+
+      const menu = new Menu()
+      menu.append(new MenuItem({label: 'Load Script', click() { prompter.controls.getScript() }}))
+
+      menu.append(new MenuItem({type: 'separator'}))
+
+      menu.append(new MenuItem({label: 'Jump to Start', click() { prompter.controls.scriptHome() }}))
+      menu.append(new MenuItem({label: 'Jump to End', click() { prompter.controls.scriptEnd() }}))
+
+      menu.append(new MenuItem({type: 'separator'}))
+      var caretMenuItem = new MenuItem({
+        label: 'Show Caret', type: 'checkbox', checked: true,
+        click (e){
+          e.checked = prompter.controls.toggleCaret();
+        }})
+      menu.append(caretMenuItem)
+
+      var readlineMenuItem = new MenuItem({
+        label: 'Show Readline', type: 'checkbox', checked: false,
+        click (e){
+          e.checked = prompter.controls.toggleReadline();
+        }})
+      menu.append(readlineMenuItem)
+
+      var percentMenuItem = new MenuItem({
+        label: 'Show Percent', type: 'checkbox', checked: true,
+        click (e){
+          e.checked = prompter.controls.togglePercent();
+        }});
+      menu.append(percentMenuItem)
+      
+      var progressMenuItem = new MenuItem({
+        label: 'Show Progress', type: 'checkbox', checked: true,
+        click (e){
+          e.checked = prompter.controls.toggleProgress();
+        }})
+      menu.append(progressMenuItem)
+
+      menu.append(new MenuItem({type: 'separator'}))
+
+      menu.append(new MenuItem({label: 'Exit', click() { prompter.controls.getScript() }}))
+
+
+      window.addEventListener('contextmenu', (e) => {
+        e.preventDefault()
+        menu.popup(remote.getCurrentWindow())
+      }, false)
 
       //controls`
       window.addEventListener('wheel', function(event){
@@ -49,12 +100,12 @@
         else if (event.deltaY > 0) {
           prompter.controls.increaseSpeed()
         }
-      })
+      });
 
       //handle open script request
       prompter.onScriptOpen(function(){
         ipc.send('open-file-dialog');
-      })
+      });
 
       //what to do if we get a new script?
       ipc.on('selected-file', function(event, filepath){
@@ -65,9 +116,9 @@
           }
           // Change how to handle the file content
           prompter.setScript(data);
-        })
+        });
 
-      })
+      });
     </script>
   </body>
 
