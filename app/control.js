@@ -23,10 +23,10 @@ angular
     $scope.keys = PrompterService.defs;
     // setting values
     $scope.settings = PrompterService.settings
-    console.log(PrompterService.settings)
+    // console.log(PrompterService.settings)
 
     $scope.updateSetting = function(setting, value){
-      console.log(PrompterService.set[setting](value));
+      PrompterService.set[setting](value);
     }
   }
 

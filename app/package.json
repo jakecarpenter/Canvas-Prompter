@@ -1,6 +1,7 @@
 
 {
-    "name": "CubePrompter",
+    "name": "CanvasPrompter",
     "version": "0.1.0",
-    "main": "main.js"
+    "main": "main.js",
+    "productName": "Canvas Prompter"
 }
