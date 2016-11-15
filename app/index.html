@@ -1,89 +1,13 @@
 <html>
   <head>
-    <title>Simple Prompter</title>
+    <title>Canvas Prompter</title>
 
-    <style type="text/css">
-      body {
-        overflow: hidden;
-      }
-      canvas {
-      	position: absolute;
-    		top: 0px;
-    		left:0px;
-          	/**/
-          }
-
-      .scriptCan {
-      	background-color: black;
-      }
-
-      .animate-slide {
-        background:white;
-        position:absolute;
-        width: 100%;
-        height:50%;
-        bottom: 0;
-        left: 0;
-        -webkit-transform: translate3d(0,0,0); /* Chrome, Safari, Opera */
-        transform: translate3d(0,0,0,);
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        -webkit-perspective: 1000;
-        perspective: 1000;
-      }
-
-      .animate-slide.ng-hide-add,
-      .animate-slide.ng-hide-remove {
-        display:block!important;
-      }
-
-      .animate-slide.ng-hide-remove.ng-hide-remove-active {
-        -webkit-animation:0.5s slide-up;
-        animation:0.5s slide-up;
-      }
-
-      .animate-slide.ng-hide-add.ng-hide-add-active {
-        -webkit-animation:0.5s slide-down;
-        animation:0.5s slide-down;
-      }
-
-      .animate-slide.ng-hide {
-        top:100%;
-        display:block!important;
-      }
-
-      /* Chrome, Safari, Opera */
-      @-webkit-keyframes slide-up
-      {
-        0%   {top:100%;}
-        100%  {top:0;}
-      }
-
-      /* Standard syntax */
-      @keyframes slide-up
-      {
-        0%   {top:100%;}
-        100%  {top:0;}
-      }
-
-      /* Chrome, Safari, Opera */
-      @-webkit-keyframes slide-down
-      {
-        0%  {top:0;}
-        100%   {top:100%;}
-      }
-
-      /* Standard syntax */
-      @keyframes slide-down
-      {
-        0%  {top:0;}
-        100%   {top:100%;}
-      }
-
-    </style>
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="app.css">
   </head>
   <body>
-
+    <script type="text/javascript" src="../node_modules/jquery/jquery.js"></script>
+    <script type="text/javascript">var jQuery = window.$;</script>
     <script type="text/javascript" src="canvasprompter.js"></script>
 
     <!-- key map defs -->
@@ -94,6 +18,10 @@
     <script type="text/javascript" src="../node_modules/angular-animate/angular-animate.js"></script>
     <script type="text/javascript" src="control.js"></script>
 
+    <!-- bootstrap -->
+    
+    <script type="text/javascript" src="../node_modules/bootstrap/dist/js/bootstrap.js"></script>
+
     <!--  actual stuff-->
     <script type="text/javascript">
       //what do we need on the renderer?
@@ -101,7 +29,7 @@
       const fs = require('fs')
 
     	//now, create the prompter
-    	var prompter = new PROMPTER();
+    	var prompter = new Prompter();
 
       //set it to window size
       prompter.maximize();
@@ -152,6 +80,19 @@
         }})
       menu.append(progressMenuItem)
 
+      var settingsMenuItem = new MenuItem({
+        label: 'Show Settings', type: 'checkbox',
+        click (e){
+          window.dispatchEvent(new Event('settings-toggle'));
+        }})
+
+      window.addEventListener('settings-toggle', function(event){
+          setTimeout(function(){
+          settingsMenuItem.checked = window.settingsVisible;
+        }, 100);
+        });
+      menu.append(settingsMenuItem)
+
       menu.append(new MenuItem({type: 'separator'}))
 
       menu.append(new MenuItem({label: 'Exit', click() { prompter.controls.getScript() }}))
@@ -196,14 +137,46 @@
     </script>
     <div ng-app="prompter">
       <div ng-controller="SettingsController" class="animate-slide" ng-show="visible">
-        <h3>Key Mappings</h3>
-        <table>
-          <tr ng-repeat="key in keys">
-            <td>{{ key.code }}</td>
-            <td>{{ key.name }}</td>
-            <td>{{ key.action }}</td>
-          </tr>
-        </table>
+<!-- tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+          <li role="presentation" class="active">
+            <a href="#keys" role="tab" data-toggle="tab">Keys</a>
+          </li>
+          <li role="presentation">
+            <a href="#values" role="tab" data-toggle="tab">Values</a>
+          </li>
+          <li role="presentation">
+            <a href="#appeareance" role="tab" data-toggle="tab">Appeance</a>
+          </li>
+        </ul>
+<!-- tab contents -->
+        <div class="tab-content">
+          <div role="tabpanel" class="tab-pane fade in active" id="keys">
+            <key-table keys="keys"></key-table>
+          </div>
+
+          <div role="tabpanel" class="tab-pane fade" id="values">
+            <table class="table table-striped">
+              <tr>
+                <th>Setting</th>
+                <th>Value</th>
+                <th></th>
+              </tr>
+              <tr key-settings ng-repeat="(setting, value) in settings">
+                <!--<td>{{ key.code }}</td>-->
+                <td>{{ setting }}</td>
+                <td>
+                  <input type="text" class="form-control" ng-model="settings[setting] "value="{{ value }}">
+                </td>
+                <td><button class="button" ng-click="updateSetting(setting, value)">update</button></td>
+              </tr>
+            </table>
+          </div>
+
+          <div role="tabpanel" class="tab-pane fade" id="appearance">app</div>
+
+        </div>
+
       </div>
     </div>
   </body>

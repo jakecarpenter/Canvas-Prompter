@@ -2,10 +2,11 @@ RegExp.escape= function(s) {
     return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 };
 
-var PROMPTER = function (options) {
+var Prompter = function (options) {
+
 	//declare our variables.
 	var options, keys, frameRate, script, orientation, width, height, textStyles = {}, textClasses = {}, caret = {},
-	progress = {}, paused, overlayStale, scriptStale, currentPercent,
+	progress = {}, paused, overlayStale, scriptStale, currentPercent, bigStep = 8, littleStep = 2, littleStep, 
 	scrollPosY, scrollSpeed, containerElement, scriptCanvas, scriptContext, overlayCanvas, overlayContext, draw, scriptify,
 	scriptOpen, readline = 20, readlineY, scriptHeight, lineHeight, currentLine = "9999999999999", numLines = 0;
 
@@ -36,6 +37,45 @@ var PROMPTER = function (options) {
 		34: 'nextMarker',
 		33: 'lastMarker'
 	};
+
+	//settings management
+	settings = function(){
+		return {
+			frameRate, scrollSpeed, lineHeight, readline, bigStep, littleStep
+		}
+	}
+
+	set = {
+		frameRate: function(value){
+			frameRate = parseInt(value);
+			return value;
+		},
+		scrollSpeed: function(value){
+			scrollSpeed = parseInt(value);
+			return value;
+		},
+		lineHeight: function(value){
+			lineHeight = parseInt(value);
+			overlayStale = true;
+			return value;
+		},
+		readline: function(value){
+			readline = parseInt(value);
+			readlineY = document.body.clientHeight * (readline/100);
+			overlayStale = true;
+			return value;
+		},
+		bigStep: function(value){
+			bigStep = parseInt(value);
+			return value;
+		},
+		littleStep: function(value){
+			littleStep = parseInt(value);
+			return value;
+		}
+
+};
+	
 
 	//how often do we redraw: (in milliseconds)
 	frameRate = 40;
@@ -349,16 +389,16 @@ var PROMPTER = function (options) {
 			scrollPosY = -scriptHeight + readlineY + (lineHeight * 1.4)
 		},
 		bigForwardStep: function(){
-			scrollPosY -= 6
+			scrollPosY -= bigStep
 		},
 		littleForwardStep: function(){
-			scrollPosY -= 2
+			scrollPosY -= littleStep
 		},
 		bigBackwardStep: function(){
-			scrollPosY += 6
+			scrollPosY += bigStep
 		},
 		littleBackwardStep: function(){
-			scrollPosY += 2
+			scrollPosY += littleStep
 		},
 		nextMarker: function(){
 
@@ -526,7 +566,7 @@ var PROMPTER = function (options) {
 			controls[keys[key]]();
 		}
 		//for dev purposes, tell us the keycodes.
-		console.log(e.keyCode);
+		// console.log(e.keyCode);
 	};
 
 
@@ -575,6 +615,8 @@ var PROMPTER = function (options) {
 		onScriptOpen: onScriptOpen,
 		setScript: setScript,
 		controls: controls,
-    keys: keys
+    keys: keys,
+		settings: settings(),
+		set: set
 	};
 }

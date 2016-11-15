@@ -1,0 +1,23 @@
+<table class="table table-striped">
+  <tr>
+    <th>Action</th>
+    <th>Key</th>
+    <th></th>
+  </tr>
+  <tr key-settings ng-repeat="key in keys">
+    <!--<td>{{ key.code }}</td>-->
+    <td>{{ key.action }}</td>
+    <td>
+      <select 
+        name="keyToUse" 
+        id="keyToUse" 
+        ng-model="key.code"
+        ng-change="updateKey()">
+        <option 
+          ng-repeat="(oKey, oCode) in allKeys" 
+          value="{{oCode}}">{{oKey}}</option>
+      </select>
+    </td>
+    <td></td>
+  </tr>
+</table>

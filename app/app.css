@@ -1,0 +1,76 @@
+body {
+  overflow: hidden;
+}
+canvas {
+  position: absolute;
+  top: 0px;
+  left:0px;
+      /**/
+    }
+
+.scriptCan {
+  background-color: black;
+}
+
+.animate-slide {
+  background:white;
+  position:absolute;
+  width: 100%;
+  height:50%;
+  bottom: 0;
+  left: 0;
+}
+.tab-pane{
+  overflow-y:scroll;
+  width:100%;
+  height: 100%;
+}
+
+.animate-slide.ng-hide-add,
+.animate-slide.ng-hide-remove {
+  display:block!important;
+}
+
+.animate-slide.ng-hide-remove.ng-hide-remove-active {
+  -webkit-animation:0.5s slide-up;
+  animation:0.5s slide-up;
+}
+
+.animate-slide.ng-hide-add.ng-hide-add-active {
+  -webkit-animation:0.5s slide-down;
+  animation:0.5s slide-down;
+}
+
+.animate-slide.ng-hide {
+  top:100%;
+  /*display:block!important;*/
+}
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes slide-up
+{
+  0%   {top:100%;}
+  100%  {top:0;}
+}
+
+/* Standard syntax */
+@keyframes slide-up
+{
+  0%   {top:100%;}
+  100%  {top:0;}
+}
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes slide-down
+{
+  0%  {top:0;}
+  100%   {top:100%;}
+}
+
+/* Standard syntax */
+@keyframes slide-down
+{
+  0%  {top:0;}
+  100%   {top:100%;}
+}
+
