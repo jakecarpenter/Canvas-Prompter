@@ -3,38 +3,51 @@
     <title>Simple Prompter</title>
 
     <style type="text/css">
-  
+      body {
+        overflow: hidden;
+      }
       canvas {
       	position: absolute;
-		top: 0px;
-		left:0px;
-      	/**/
-      }
-      
+    		top: 0px;
+    		left:0px;
+          	/**/
+          }
+
       .scriptCan {
-      	background-color: black; 
+      	background-color: black;
       }
 
     </style>
   </head>
   <body>
 
-    <script type="text/javascript" src="canvasprompter.js"></script>
+    <script type="text/javascript" src="/public/js/canvasprompter.js"></script>
     <script type="text/javascript">
-    var script = "";
 
-	//set the options:
-	var options = {
-		//where do we get the script?
-		script: {
-			url: "https://jakecarpenter.com/canvasprompter/script"
-		}
-	}
-	//now, create the prompter
-	var prompter = new PROMPTER(options);
-	
-	
+    	//now, create the prompter
+    	var prompter = new PROMPTER();
+
+      //set it to screen size
+      prompter.maximize();
+
+      //make sure it stays the right size.
+      window.addEventListener('resize', function(e){
+        prompter.maximize();
+      });
+
+      //controls`
+      window.addEventListener('wheel', function(event){
+        console.log(event.deltaY)
+        if(!event){return false;}
+        event.preventDefault();
+        if(event.deltaY < 0){
+          prompter.controls.decreaseSpeed()
+        }
+        else if (event.deltaY > 0) {
+          prompter.controls.increaseSpeed()
+        }
+      })
     </script>
   </body>
-  
+
 </html>

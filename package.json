@@ -1,0 +1,23 @@
+{
+  "name": "canvas-prompter",
+  "version": "1.0.0",
+  "description": "a canvas teleprompter",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakecarpenter/Canvas-Prompter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jakecarpenter/Canvas-Prompter/issues"
+  },
+  "homepage": "https://github.com/jakecarpenter/Canvas-Prompter#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}

@@ -1,0 +1,127 @@
+<html>
+  <head>
+    <title>Simple Prompter</title>
+
+    <style type="text/css">
+      body {
+        overflow: hidden;
+      }
+      canvas {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        /**/
+      }
+
+      .scriptCan {
+        background-color: black;
+      }
+
+      .load {
+        position: absolute;
+        bottom: 10;
+        left: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <input class="load" type="file" id="file-input" />
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/public/js/canvasprompter.js"></script>
+    <script type="text/javascript">
+      //now, create the prompter
+      var prompter = new PROMPTER();
+
+      //set it to screen size
+      prompter.maximize();
+
+      //make sure it stays the right size.
+      window.addEventListener("resize", function(e) {
+        prompter.maximize();
+      });
+
+      //controls`
+      window.addEventListener("wheel", function(event) {
+        console.log(event.deltaY);
+        if (!event) {
+          return false;
+        }
+        event.preventDefault();
+        if (event.deltaY < 0) {
+          prompter.controls.decreaseSpeed();
+        } else if (event.deltaY > 0) {
+          prompter.controls.increaseSpeed();
+        }
+      });
+
+      //handle open script request
+      function readFile(e) {
+        var file = e.target.files[0];
+        if (!file) {
+          return;
+        }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var contents = e.target.result;
+          // Display file content
+          prompter.setScript(contents);
+        };
+        reader.readAsText(file);
+      }
+
+      prompter.onScriptOpen(() => {
+        var el = document.getElementById("file-input");
+        el.click();
+      });
+
+      document
+        .getElementById("file-input")
+        .addEventListener("click", readFile, false);
+
+      // setup the sockets
+
+      var socket = io.connect("http://127.0.0.1:3000");
+      socket.on("connect", function(data) {
+        socket.emit("join", "Hello World from prompter");
+      });
+
+      var hb = setInterval(() => {
+        socket.emit("heartbeat", prompter.heartbeat());
+      }, 1000);
+
+      socket.on("command", command => {
+        switch (command) {
+          case "start":
+            prompter.controls.start();
+
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+          case "stop":
+            prompter.controls.stop();
+
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+          case "reset":
+            prompter.controls.resetScript();
+
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+          case "up":
+            prompter.controls.increaseSpeed();
+
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+          case "down":
+            prompter.controls.decreaseSpeed();
+
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+
+          default:
+            break;
+        }
+      });
+    </script>
+  </body>
+</html>

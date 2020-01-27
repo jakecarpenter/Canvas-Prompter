@@ -1,0 +1,103 @@
+<html>
+  <head>
+    <title>Simple Prompter Control</title>
+
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+        overflow: hidden;
+        }
+
+        .button {
+            width: 33vw;
+            height: 50vh;
+            border: 1px solid black;
+            margin: 0;
+        }
+
+        .stop {
+            background-color: red;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .start {
+            background-color: yellowgreen;
+            position: absolute;
+            left: 0;
+            top: 50vh;
+        }
+
+        .data {
+            position: absolute;
+            left: 33vw;
+            top: 0;
+        }
+
+        .reset {
+            background-color: yellow;
+            position: absolute;
+            left: 33vw;
+            top: 50vh;
+        }
+
+        .up {
+            background-color: rgb(92, 0, 128);
+            position: absolute;
+            left: 66vw;
+            top: 0;
+        }
+        .down {
+            background-color: rgb(0, 92, 128);
+            position: absolute;
+            left: 66vw;
+            top: 50vh;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="button stop">STOP</div>
+    <div class="button start">START</div>
+    <div class="button data">
+        <p>Speed: <span id="speed">-</span></p>
+        <p>Position: <span id="position">-</span></p>
+        <p>Paused: <span id="paused">-</span></p>
+    </div>
+    <div class="button reset">RESET</div>
+    <div class="button up">UP</div>
+    <div class="button down">DOWN</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        
+      // setup the sockets
+
+      var socket = io.connect("http://127.0.0.1:3000");
+      socket.on("connect", function(data) {
+        socket.emit("join", "Hello World from controller");
+      });
+
+      socket.on('data', (data)=>{
+        if(data){
+            document.getElementById('speed').innerHTML = data.speed
+            document.getElementById('position').innerHTML = data.position
+            document.getElementById('paused').innerHTML = data.paused
+        }
+      })
+
+      var buttons = document.getElementsByClassName('button');
+
+      for (let i = 0; i < buttons.length; i++) {
+          const element = buttons[i];
+          const type = element.classList[1] || 'null'
+          element.addEventListener('click', (e)=>{
+            socket.emit('click', type)
+          })
+          
+      }
+
+    </script>
+  </body>
+</html>
