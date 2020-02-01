@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <title>Simple Prompter Control</title>
+
+    <style type="text/css">
+    body {
+        padding: 0;
+    }
+
+    textarea {
+        width: 98vw;
+        height: 70vh;
+        margin: 0 !important;
+    }
+    </style>
+  </head>
+  <body>
+    <textarea id="script">
+        asdf
+    </textarea>
+    
+    <button id="gets"> Get Script</button>
+    <button id="sets"> Set Script</button>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        
+        document
+        .getElementById("gets")
+        .addEventListener("click", function(){
+            socket.emit("getScript");
+        }, false);
+
+        document
+        .getElementById("sets")
+        .addEventListener("click", function(){
+            socket.emit("setScript", document.getElementById('script').value)
+        }, false);
+
+
+      // setup the sockets
+
+      var socket = io.connect("http://127.0.0.1:3000");
+
+      socket.on("connect", function(data) {
+        socket.emit("join", "Hello World from scripts");
+      });
+
+      socket.on('script', (data)=>{
+          var scripity = document.getElementById('script');
+          
+          var raw = ""; 
+          for (const wrd in data) {
+              if (data.hasOwnProperty(wrd)) {
+                  const word = data[wrd];
+                  raw += word.word;
+              }
+          }
+          scripity.value = raw;
+      })
+
+
+    </script>
+  </body>
+</html>

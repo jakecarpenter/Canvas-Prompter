@@ -10,10 +10,14 @@
         }
 
         .button {
-            width: 33vw;
-            height: 50vh;
+            width: 25vw;
+            height: 33vh;
             border: 1px solid black;
             margin: 0;
+        }
+
+        .half {
+            height: 17vh !important;
         }
 
         .stop {
@@ -27,45 +31,61 @@
             background-color: yellowgreen;
             position: absolute;
             left: 0;
-            top: 50vh;
+            top: 33vh;
         }
 
         .data {
             position: absolute;
-            left: 33vw;
+            left: 25vw;
             top: 0;
         }
 
         .reset {
             background-color: yellow;
             position: absolute;
-            left: 33vw;
-            top: 50vh;
+            left: 25vw;
+            top: 16vh;
+        }
+
+        .x {
+            background-color: rgb(0, 255, 221);
+            position: absolute;
+            left: 25vw;
+            top: 33vh;
+        }
+
+        .y {
+            background-color: rgb(0, 125, 221);
+            position: absolute;
+            left: 25vw;
+            top: 49vh;
         }
 
         .up {
             background-color: rgb(92, 0, 128);
             position: absolute;
-            left: 66vw;
+            left: 75vw;
             top: 0;
         }
         .down {
             background-color: rgb(0, 92, 128);
             position: absolute;
-            left: 66vw;
-            top: 50vh;
+            left: 75vw;
+            top: 33vh;
         }
     </style>
   </head>
   <body>
     <div class="button stop">STOP</div>
     <div class="button start">START</div>
-    <div class="button data">
+    <div class="button data half">
         <p>Speed: <span id="speed">-</span></p>
         <p>Position: <span id="position">-</span></p>
         <p>Paused: <span id="paused">-</span></p>
     </div>
-    <div class="button reset">RESET</div>
+    <div class="button reset half">RESET</div>
+    <div class="button x half">Flip X</div>
+    <div class="button y half">Flip Y</div>
     <div class="button up">UP</div>
     <div class="button down">DOWN</div>
 

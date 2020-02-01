@@ -290,7 +290,8 @@ var PROMPTER = function (options) {
 			overlayStale = true;
 		},
 		stop: () => paused = true,
-		start: () => paused = false
+		start: () => paused = false,
+		getScript: () => { return script}
 
 	}
 

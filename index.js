@@ -9,6 +9,7 @@ const port = 3000;
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname + '/node_modules'));
 app.get('/control', (req, res) => res.sendFile( path.join(__dirname, 'control.html')))
+app.get('/script', (req, res) => res.sendFile( path.join(__dirname, 'script.html')))
 app.get('/', (req, res) => res.sendFile( path.join(__dirname, 'index.html')));
 
 
@@ -26,6 +27,16 @@ io.on('connection', (client)=> {
     });
     client.on('heartbeat', (data)=> {
         io.emit('data', data);
+    })
+    client.on("getScript", ()=> {
+        io.emit('command', "script");
+    })
+
+    client.on("setScript", (script)=> {
+        io.emit('command', "setScript", script);
+    })
+    client.on("script", (script)=> {
+        io.emit('script', script);
     })
 })
 

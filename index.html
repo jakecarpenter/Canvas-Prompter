@@ -90,7 +90,7 @@
         socket.emit("heartbeat", prompter.heartbeat());
       }, 1000);
 
-      socket.on("command", command => {
+      socket.on("command", (command, data) => {
         switch (command) {
           case "start":
             prompter.controls.start();
@@ -117,7 +117,24 @@
 
             socket.emit("heartbeat", prompter.heartbeat());
             break;
-
+          case "x":
+            prompter.controls.flipHorizontal();
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+          case "y":
+            prompter.controls.flipVertical();
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+          case "script":
+            socket.emit("script",prompter.controls.getScript())
+            socket.emit("heartbeat", prompter.heartbeat());
+            break;
+          case "setScript":
+            // socket.emit("script",prompter.controls.getScript())
+            prompter.setScript(data)
+            socket.emit("heartbeat", prompter.heartbeat());
+            console.log(command, data)
+            break;
           default:
             break;
         }
